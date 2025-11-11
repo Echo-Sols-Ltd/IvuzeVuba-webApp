@@ -1,7 +1,9 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import * as XLSX from "xlsx";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 type Referral = {
   date: string;
@@ -36,6 +38,14 @@ const referrals: Referral[] = [
 
 export default function ReferralTable({ data }: { data?: Referral[] }) {
   const tableData = data || referrals;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  const totalPages = Math.ceil(tableData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentReferrals = tableData.slice(startIndex, endIndex);
+
   const handleExport = (records: Referral[], filename = "referrals.xlsx") => {
     const worksheet = XLSX.utils.json_to_sheet(records);
     const workbook = XLSX.utils.book_new();
@@ -72,7 +82,7 @@ export default function ReferralTable({ data }: { data?: Referral[] }) {
             </tr>
           </thead>
           <tbody>
-            {tableData.map((r, i) => (
+            {currentReferrals.map((r, i) => (
               <tr key={i} className="border-b">
                 <td className="px-4 py-2">{r.date}</td>
                 <td className="px-4 py-2">{r.patient}</td>
@@ -106,6 +116,35 @@ export default function ReferralTable({ data }: { data?: Referral[] }) {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-gray-700">
+            Showing {startIndex + 1} to {Math.min(endIndex, tableData.length)} of {tableData.length} results
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

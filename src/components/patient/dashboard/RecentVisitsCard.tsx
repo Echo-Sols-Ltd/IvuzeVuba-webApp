@@ -15,7 +15,7 @@ interface RecentVisitsCardProps {
 }
 
 export const RecentVisitsCard = ({ visits }: RecentVisitsCardProps) => (
-  <div className="bg-white rounded-lg border p-6 shadow-sm">
+  <div className="bg-white rounded-lg border p-6 shadow-sm transition-all duration-300 hover:shadow-lg">
     <div className="flex items-center justify-between mb-4">
       <div>
         <h3 className="text-lg font-semibold text-gray-900">Recent Visits</h3>
@@ -25,7 +25,7 @@ export const RecentVisitsCard = ({ visits }: RecentVisitsCardProps) => (
       </div>
       <a
         href="/patient/visits"
-        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+        className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors duration-200 hover:underline"
       >
         View more
       </a>
@@ -33,7 +33,7 @@ export const RecentVisitsCard = ({ visits }: RecentVisitsCardProps) => (
 
     <div className="space-y-4">
       {visits.map((visit) => (
-        <div key={visit.id} className="p-4 bg-gray-50 rounded-lg">
+        <div key={visit.id} className="p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100 hover:shadow-md">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex-1">
               <p className="font-medium text-gray-900">{visit.hospital}</p>
@@ -52,14 +52,14 @@ export const RecentVisitsCard = ({ visits }: RecentVisitsCardProps) => (
                     : visit.status === "completed"
                     ? "bg-green-100 text-green-800 border-green-200"
                     : "bg-red-100 text-red-800 border-red-200"
-                } px-3 py-1 rounded-full text-sm font-medium w-fit`}
+                } px-3 py-1 rounded-full text-sm font-medium w-fit transition-all duration-200`}
               >
                 {visit.status}
               </Badge>
               <Button
                 variant="outline"
                 size="sm"
-                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white w-full sm:w-auto"
+                className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white w-full sm:w-auto transition-all duration-300 hover:scale-105"
               >
                 View details
               </Button>

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import Navbar from "@/components/doctor/Navbar";
+import Image from "next/image";
 
 export default function PatientForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -34,27 +34,76 @@ export default function PatientForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="min-h-screen flex">
+      {/* Left Panel */}
+      <div className="hidden lg:flex lg:w-[30%] bg-blue-600 flex-col justify-between p-8">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
+            <Image
+              src="/logo.svg"
+              alt="HealthLink Logo"
+              width={24}
+              height={24}
+              className="object-contain"
+            />
+          </div>
+          <span className="text-white text-xl font-semibold">HealthLink</span>
+        </div>
 
-      <div className="pt-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="text-center mb-8">
-          <Link
-            href="/patient/auth/login"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Login
-          </Link>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+        <div className="flex-1 flex flex-col justify-center items-center text-center">
+          <h1 className="text-3xl font-bold text-white mb-4 leading-tight">
             Reset Your Password
           </h1>
-          <p className="text-gray-600">
-            Enter your email to receive a reset code
+          <p className="text-blue-100 text-lg leading-relaxed">
+            Secure your account with a new password in just a few steps.
           </p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border p-8 max-w-md mx-auto">
+        <div className="flex items-end justify-between">
+          <Image
+            src="/patients/boxImage.png"
+            alt="First Aid Kit"
+            width={100}
+            height={100}
+            className="object-contain"
+          />
+          <Image
+            src="/patients/doctorImage.png"
+            alt="Doctor"
+            width={180}
+            height={180}
+            className="object-contain"
+          />
+          <Image
+            src="/patients/doctorTool.png"
+            alt="Stethoscope"
+            width={90}
+            height={90}
+            className="object-contain"
+          />
+        </div>
+      </div>
+
+      {/* Right Panel */}
+      <div className="flex-1 lg:w-[70%] bg-white p-6 lg:p-12 flex items-center justify-center">
+        <div className="w-full max-w-lg">
+          <div className="text-center mb-8">
+            <Link
+              href="/patient/auth/login"
+              className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Login
+            </Link>
+            <h2 className="text-3xl font-bold text-gray-900">
+              Reset Your Password
+            </h2>
+            <p className="text-gray-600 mt-2">
+              Enter your email to receive a reset code
+            </p>
+          </div>
+
+          <div className="space-y-6">
           {step === 1 && (
             <div className="space-y-6">
               <div>
@@ -78,7 +127,7 @@ export default function PatientForgotPasswordPage() {
               <Button
                 onClick={handleSendOTP}
                 disabled={!email}
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
                 Send Reset Code
               </Button>
@@ -118,7 +167,7 @@ export default function PatientForgotPasswordPage() {
                 <Button
                   onClick={handleVerifyOTP}
                   disabled={!otp}
-                  className="flex-1 bg-gray-900 hover:bg-gray-800 text-white"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Verify Code
                 </Button>
@@ -186,7 +235,7 @@ export default function PatientForgotPasswordPage() {
                     !confirmPassword ||
                     newPassword !== confirmPassword
                   }
-                  className="flex-1 bg-gray-900 hover:bg-gray-800 text-white"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Reset Password
                 </Button>
@@ -194,16 +243,17 @@ export default function PatientForgotPasswordPage() {
             </div>
           )}
 
-          <div className="text-center mt-6 pt-6 border-t">
-            <p className="text-gray-600">
-              Remember your password?{" "}
-              <Link
-                href="/patient/auth/login"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Sign in
-              </Link>
-            </p>
+            <div className="text-center mt-6 pt-6 border-t">
+              <p className="text-gray-600">
+                Remember your password?{" "}
+                <Link
+                  href="/patient/auth/login"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>

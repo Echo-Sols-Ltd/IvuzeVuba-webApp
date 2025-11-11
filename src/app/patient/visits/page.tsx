@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import Navbar from "@/components/doctor/Navbar";
 import PatientSidebar from "@/components/patient/PatientSidebar";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Download, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import * as XLSX from "xlsx";
 
 export default function ViewVisitsPage() {
   const [isMobile, setIsMobile] = useState(false);
@@ -157,6 +159,20 @@ export default function ViewVisitsPage() {
     setCurrentPage(page);
   };
 
+  const handleDownload = (visit: typeof visits[0]) => {
+    const worksheet = XLSX.utils.json_to_sheet([visit]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Visit");
+    XLSX.writeFile(workbook, `visit_${visit.id}_${visit.date}.xlsx`);
+  };
+
+  const handleDownloadAll = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredVisits);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Visits");
+    XLSX.writeFile(workbook, "all_visits.xlsx");
+  };
+
   if (isMobile) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -195,6 +211,15 @@ export default function ViewVisitsPage() {
                   className="pl-10"
                 />
               </div>
+
+              <Button
+                onClick={handleDownloadAll}
+                variant="outline"
+                className="w-full"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Export All Visits
+              </Button>
             </div>
 
             <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -230,7 +255,7 @@ export default function ViewVisitsPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {currentVisits.map((visit) => (
-                      <tr key={visit.id} className="hover:bg-gray-50">
+                      <tr key={visit.id} className="hover:bg-gray-50 transition-colors duration-200">
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {visit.date}
                         </td>
@@ -258,6 +283,7 @@ export default function ViewVisitsPage() {
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0"
+                              onClick={() => handleDownload(visit)}
                             >
                               <Download className="h-4 w-4" />
                             </Button>
@@ -326,21 +352,32 @@ export default function ViewVisitsPage() {
 
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <Select
-                  value={selectedDepartment}
-                  onValueChange={setSelectedDepartment}
-                >
-                  <SelectTrigger className="w-64">
-                    <SelectValue placeholder="Filter Department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((dept) => (
-                      <SelectItem key={dept.id} value={dept.id}>
-                        {dept.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex items-center gap-4">
+                  <Select
+                    value={selectedDepartment}
+                    onValueChange={setSelectedDepartment}
+                  >
+                    <SelectTrigger className="w-64">
+                      <SelectValue placeholder="Filter Department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.id}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Button
+                    onClick={handleDownloadAll}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export All
+                  </Button>
+                </div>
 
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -414,6 +451,7 @@ export default function ViewVisitsPage() {
                                 variant="ghost"
                                 size="sm"
                                 className="h-8 w-8 p-0"
+                                onClick={() => handleDownload(visit)}
                               >
                                 <Download className="h-4 w-4" />
                               </Button>

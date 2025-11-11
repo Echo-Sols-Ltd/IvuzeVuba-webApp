@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, Download, X } from "lucide-react";
+import { motion } from "framer-motion";
 import Navbar from "@/components/doctor/Navbar";
 import PatientSidebar from "@/components/patient/PatientSidebar";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import * as XLSX from "xlsx";
 
 interface Prescription {
   id: string;
@@ -183,15 +185,35 @@ const PrescriptionsPage = () => {
     setSelectedPrescription(null);
   };
 
+  const handleDownloadPrescription = (prescription: Prescription) => {
+    const worksheet = XLSX.utils.json_to_sheet([prescription]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Prescription");
+    XLSX.writeFile(workbook, `prescription_${prescription.name.replace(/\s+/g, "_")}.xlsx`);
+  };
+
+  const handleDownloadAll = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredPrescriptions);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Prescriptions");
+    XLSX.writeFile(workbook, "all_prescriptions.xlsx");
+  };
+
   const PrescriptionCard = ({
     prescription,
   }: {
     prescription: Prescription;
   }) => (
-    <div className="bg-white rounded-lg border p-4 shadow-sm hover:shadow-md transition-shadow">
+    <motion.div 
+      className="bg-white rounded-lg border p-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.02 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse-soft"></div>
           <span className="text-sm text-gray-600">
             Prescribed: {prescription.prescribedDate}
           </span>
@@ -215,14 +237,16 @@ const PrescriptionsPage = () => {
           </span>
         </div>
       </div>
-      <Button
-        onClick={() => handleViewDetails(prescription)}
-        variant="outline"
-        className="w-full mt-4 border-black text-black hover:bg-black hover:text-white"
-      >
-        View Details
-      </Button>
-    </div>
+      <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+        <Button
+          onClick={() => handleViewDetails(prescription)}
+          variant="outline"
+          className="w-full mt-4 border-black text-black hover:bg-black hover:text-white transition-all duration-300"
+        >
+          View Details
+        </Button>
+      </motion.div>
+    </motion.div>
   );
 
   if (isMobile) {
@@ -325,39 +349,54 @@ const PrescriptionsPage = () => {
           <PatientSidebar />
         </div>
         <div className="flex-1 p-6 space-y-6">
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <h1 className="text-3xl font-bold text-gray-900">
               My prescriptions
             </h1>
             <p className="text-gray-600 mt-2">Manage your medications</p>
-          </div>
+          </motion.div>
 
-          <div className="flex items-center gap-4">
-            <Select
-              value={selectedDepartment}
-              onValueChange={setSelectedDepartment}
-            >
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter Department" />
-              </SelectTrigger>
-              <SelectContent>
-                {departments.map((dept) => (
-                  <SelectItem key={dept.value} value={dept.value}>
-                    {dept.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <Select
+                value={selectedDepartment}
+                onValueChange={setSelectedDepartment}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter Department" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.value} value={dept.value}>
+                      {dept.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-64"
+                />
+              </div>
             </div>
+
+            <Button
+              onClick={handleDownloadAll}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export All
+            </Button>
           </div>
 
           <Tabs defaultValue="active" className="w-full">
@@ -529,7 +568,10 @@ const PrescriptionsPage = () => {
               </div>
 
               <div className="flex gap-4 mt-8 pt-6 border-t">
-                <Button className="flex-1 bg-black text-white hover:bg-gray-800">
+                <Button 
+                  onClick={() => handleDownloadPrescription(selectedPrescription)}
+                  className="flex-1 bg-black text-white hover:bg-gray-800"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Download prescription
                 </Button>

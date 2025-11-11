@@ -19,7 +19,7 @@ export default function PatientCard({ patient }: PatientCardProps) {
       {/* Patient Info */}
       <div className="flex items-start gap-3">
         <Image
-          src={patient.image}
+          src={patient.image || "/placeholder-avatar.png"}
           alt="Patient Avatar"
           width={48}
           height={48}

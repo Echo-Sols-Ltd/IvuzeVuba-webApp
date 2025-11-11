@@ -1,4 +1,6 @@
+"use client";
 
+import { motion } from "framer-motion";
 import QueueList from "@/components/manager/patients/QueueList";
 import QueueTabs from "@/components/manager/patients/QueueTabs";
 import PageHeader from "@/components/manager/staff/PageHeader";
@@ -43,20 +45,38 @@ export default function QueuePage() {
 
   return (
     <div className="p-6">
-      <PageHeader
-        title="Users & Staff Management"
-        description="Manage staff directory and user accounts"
-        action={<AddUserModal />}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <PageHeader
+          title="Users & Staff Management"
+          description="Manage staff directory and user accounts"
+          action={<AddUserModal />}
+        />
+      </motion.div>
 
-      <StatsCards stats={stats} />      
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <StatsCards stats={stats} />
+      </motion.div>
 
-      <QueueTabs
-        unassignedContent={
-          <QueueList queues={queues.filter((q) => !q.assigned)} />
-        }
-        allContent={<QueueList queues={queues} />}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <QueueTabs
+          unassignedContent={
+            <QueueList queues={queues.filter((q) => !q.assigned)} />
+          }
+          allContent={<QueueList queues={queues} />}
+        />
+      </motion.div>
     </div>
   );
 }

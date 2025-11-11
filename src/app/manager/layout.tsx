@@ -3,10 +3,20 @@
 import Navbar from "@/components/doctor/Navbar";
 import Sidebar from "@/components/manager/Sidebar";
 import React, { ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 const DoctorLayout = ({ children }: { children: ReactNode }) => {
+  const pathname = usePathname();
 
-  // Default Doctor layout with Navbar + Sidebar
+  // Exclude auth pages from dashboard layout
+  const isAuthPage = pathname?.startsWith("/manager/auth");
+
+  if (isAuthPage) {
+    // Auth pages without layout
+    return <>{children}</>;
+  }
+
+  // Default Manager layout with Navbar + Sidebar
   return (
     <div className="h-screen flex flex-col">
       <div className="fixed top-0 w-full"> 

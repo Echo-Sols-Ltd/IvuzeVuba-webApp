@@ -115,21 +115,111 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-white text-foreground font-poppins;
   }
 }
 
-
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
+/* Smooth transitions for all interactive elements */
+@layer utilities {
+  .transition-smooth {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  .hover-lift {
+    @apply transition-all duration-200 ease-out hover:scale-105 hover:shadow-lg;
+  }
+
+  .hover-glow {
+    @apply transition-all duration-300 hover:shadow-xl;
+  }
+}
+
+/* Global smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Smooth transitions for buttons and links */
+button,
+a {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Card hover effects */
+.card-interactive {
+  @apply transition-all duration-300 ease-out hover:shadow-lg hover:-translate-y-1;
+}
+
+/* Input focus effects */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply transition-all duration-200;
+}
+
 .PhoneInput {
   @apply w-full;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+/* Pulse animation for notifications */
+@keyframes pulse-soft {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

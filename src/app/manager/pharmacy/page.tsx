@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import InventoryFilters from "@/components/manager/pharmacy/InventoryFilters";
 import InventoryList from "@/components/manager/pharmacy/InventoryList";
 import InventoryStats from "@/components/manager/pharmacy/InventoryStats";
@@ -48,18 +49,51 @@ export default function PharmacyPage() {
 
   return (
     <div className="p-6">
-      <PharmacyHeader />
-      <InventoryStats />
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <PharmacyHeader />
+      </motion.div>
 
-      <InventoryFilters
-        filterType={filterType}
-        setFilterType={setFilterType}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <InventoryStats />
+      </motion.div>
 
-      <h2 className="text-xl font-semibold mb-4">Medical inventory</h2>
-      <InventoryList items={filteredItems} />
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <InventoryFilters
+          filterType={filterType}
+          setFilterType={setFilterType}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+        />
+      </motion.div>
+
+      <motion.h2 
+        className="text-xl font-semibold mb-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        Medical inventory
+      </motion.h2>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <InventoryList items={filteredItems} />
+      </motion.div>
     </div>
   );
 }

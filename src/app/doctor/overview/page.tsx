@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import Card from "@/components/doctor/Card";
 import TopQueue from "@/components/doctor/TopQueue";
 import NextInQueue from "@/components/doctor/NextQueue";
@@ -20,28 +23,65 @@ const Page = () => {
       <Navbar />
       <div className="flex pt-20">
         <main className="flex-1 p-6">
-          <h1 className="font-semibold text-2xl">Welcome back, John</h1>
-          <p className="text-gray-600">
-            Here&apos;s your health overview for today
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h1 className="font-semibold text-2xl">Welcome back, John</h1>
+            <p className="text-gray-600">
+              Here&apos;s your health overview for today
+            </p>
+          </motion.div>
 
-          <div className="flex gap-4">
+          <motion.div 
+            className="flex gap-4 mt-6"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1
+                }
+              }
+            }}
+          >
             {data.map((item, idx) => (
-              <div key={idx} className="flex-1">
+              <motion.div 
+                key={idx} 
+                className="flex-1"
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 }
+                }}
+                whileHover={{ scale: 1.05 }}
+              >
                 <Card title={item.title} total={item.total} />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
-          <div className="flex gap-4">
+          <motion.div 
+            className="flex gap-4 mt-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
             <TopQueue />
             <NextInQueue />
-          </div>
+          </motion.div>
 
-          <div className="flex gap-4">
+          <motion.div 
+            className="flex gap-4 mt-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
             <RecentNotifications />
             <CalendarCard />
-          </div>
+          </motion.div>
         </main>
       </div>
       <Chatbot />

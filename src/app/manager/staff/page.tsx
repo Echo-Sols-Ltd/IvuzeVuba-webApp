@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import StaffTabs from "@/components/manager/staff/StaffTabs";
 import StaffList from "@/components/manager/staff/StaffList";
 import FiltersBar from "@/components/manager/staff/FiltersBar";
 import PageHeader from "@/components/manager/staff/PageHeader";
 import AddUserModal from "@/components/modals/AddUserModal";
+import DepartmentManagement from "@/components/manager/staff/DepartmentManagement";
 
 const staffData = [
   {
@@ -52,28 +54,41 @@ export default function StaffPage() {
 
   return (
     <div className="p-6">
-      <PageHeader
-        title="Users & Staff Management"
-        description="Manage staff directory and user accounts"
-        action={<AddUserModal />}
-      />
-      <StaffTabs
-        staffContent={
-          <div>
-            <FiltersBar
-              filterLabel="Filter by Role"
-              filterOptions={filterOptions}
-              searchPlaceholder="Search staff..."
-              filterValue={filterValue}
-              setFilterValue={setFilterValue}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-            />
-            <StaffList staff={filteredStaff} />
-          </div>
-        }
-        departmentContent={<div>Department management content goes here.</div>}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <PageHeader
+          title="Users & Staff Management"
+          description="Manage staff directory and user accounts"
+          action={<AddUserModal />}
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <StaffTabs
+          staffContent={
+            <div>
+              <FiltersBar
+                filterLabel="Filter by Role"
+                filterOptions={filterOptions}
+                searchPlaceholder="Search staff..."
+                filterValue={filterValue}
+                setFilterValue={setFilterValue}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+              />
+              <StaffList staff={filteredStaff} />
+            </div>
+          }
+          departmentContent={<DepartmentManagement />}
+        />
+      </motion.div>
     </div>
   );
 }

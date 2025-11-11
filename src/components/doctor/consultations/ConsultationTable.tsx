@@ -1,7 +1,9 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Download, ChevronLeft, ChevronRight } from "lucide-react";
 import * as XLSX from "xlsx";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const consultations = [
   {
@@ -27,11 +29,26 @@ const consultations = [
 ];
 
 export default function ConsultationTable() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
+  const totalPages = Math.ceil(consultations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentConsultations = consultations.slice(startIndex, endIndex);
+
   const handleExport = () => {
     const worksheet = XLSX.utils.json_to_sheet(consultations);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Consultations");
     XLSX.writeFile(workbook, "consultations.xlsx");
+  };
+
+  const handleDownloadSingle = (consultation: typeof consultations[0]) => {
+    const worksheet = XLSX.utils.json_to_sheet([consultation]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Consultation");
+    XLSX.writeFile(workbook, `consultation_${consultation.patient.replace(/\s+/g, "_")}.xlsx`);
   };
 
   return (
@@ -62,7 +79,7 @@ export default function ConsultationTable() {
             </tr>
           </thead>
           <tbody>
-            {consultations.map((c, i) => (
+            {currentConsultations.map((c, i) => (
               <tr key={i} className="border-b">
                 <td className="px-4 py-2">{c.date}</td>
                 <td className="px-4 py-2">{c.patient}</td>
@@ -72,7 +89,10 @@ export default function ConsultationTable() {
                 <td className="px-4 py-2">{c.duration}</td>
                 <td className="px-4 py-2">{c.status}</td>
                 <td className="px-4 py-2">
-                  <button className="p-2 rounded hover:bg-gray-100">
+                  <button 
+                    onClick={() => handleDownloadSingle(c)}
+                    className="p-2 rounded hover:bg-gray-100"
+                  >
                     <Download className="w-4 h-4" />
                   </button>
                 </td>
@@ -81,6 +101,35 @@ export default function ConsultationTable() {
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-gray-700">
+            Showing {startIndex + 1} to {Math.min(endIndex, consultations.length)} of {consultations.length} results
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

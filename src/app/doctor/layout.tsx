@@ -8,9 +8,17 @@ import { usePathname } from "next/navigation";
 const DoctorLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
+  // Exclude auth pages from dashboard layout
+  const isAuthPage = pathname?.startsWith("/doctor/auth");
+
   // Match only /doctor/patients/[patientId]
   const isPatientChart =
     /^\/doctor\/patients\/[^/]+$/.test(pathname || "");
+
+  if (isAuthPage) {
+    // Auth pages without layout
+    return <>{children}</>;
+  }
 
   if (isPatientChart) {
     // Fullscreen layout without Navbar/Sidebar

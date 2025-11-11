@@ -14,6 +14,7 @@ import {
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -33,12 +34,13 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [visitDetailsOpen, setVisitDetailsOpen] = useState(false);
 
   const links = [
     { label: "Overview", href: "/patient/dashboard", icon: LayoutDashboard },
     {
       label: "Visit Details",
-      href: "/patient/visits/create",
+      href: "#",
       icon: Calendar,
       hasDropdown: true,
     },
@@ -105,49 +107,79 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
               return (
                 <li key={idx}>
                   <div>
-                    <Link
-                      href={link.href}
-                      onClick={() => setOpen(false)}
-                      className={`flex items-center gap-3 px-4 py-3 text-sm ${
-                        isActive
-                          ? "bg-[#E6F2FB] border-r-4 border-[#118CDB] font-medium text-gray-900"
-                          : "text-gray-700 hover:bg-gray-100"
-                      } ${isCollapsed ? "justify-center" : ""}`}
-                    >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
-                      {!isCollapsed && <span>{link.label}</span>}
-                      {!isCollapsed && link.hasDropdown && (
-                        <svg
-                          className="ml-auto h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      )}
-                    </Link>
-
-                    {link.hasDropdown && !isCollapsed && (
-                      <div className="ml-8 border-l border-gray-200">
-                        {subLinks.map((subLink, subIdx) => (
-                          <Link
-                            key={subIdx}
-                            href={subLink.href}
-                            onClick={() => setOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                    {link.hasDropdown ? (
+                      <button
+                        onClick={() => setVisitDetailsOpen(!visitDetailsOpen)}
+                        className={`flex items-center gap-3 px-4 py-3 text-sm w-full ${
+                          isActive
+                            ? "bg-[#E6F2FB] border-r-4 border-[#118CDB] font-medium text-gray-900"
+                            : "text-gray-700 hover:bg-gray-100"
+                        } ${isCollapsed ? "justify-center" : ""}`}
+                      >
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        {!isCollapsed && <span>{link.label}</span>}
+                        {!isCollapsed && (
+                          <svg
+                            className={`ml-auto h-4 w-4 transition-transform ${
+                              visitDetailsOpen ? "rotate-180" : ""
+                            }`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
                           >
-                            <FileText className="h-3 w-3" />
-                            {subLink.label}
-                          </Link>
-                        ))}
-                      </div>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 9l-7 7-7-7"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    ) : (
+                      <Link
+                        href={link.href}
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 text-sm ${
+                          isActive
+                            ? "bg-[#E6F2FB] border-r-4 border-[#118CDB] font-medium text-gray-900"
+                            : "text-gray-700 hover:bg-gray-100"
+                        } ${isCollapsed ? "justify-center" : ""}`}
+                      >
+                        <Icon className="h-4 w-4 flex-shrink-0" />
+                        {!isCollapsed && <span>{link.label}</span>}
+                      </Link>
                     )}
+
+                    <AnimatePresence>
+                      {link.hasDropdown && !isCollapsed && visitDetailsOpen && (
+                        <motion.div 
+                          className="ml-8 border-l border-gray-200 overflow-hidden"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                        >
+                          {subLinks.map((subLink, subIdx) => (
+                            <motion.div
+                              key={subIdx}
+                              initial={{ x: -10, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: subIdx * 0.1, duration: 0.3 }}
+                            >
+                              <Link
+                                href={subLink.href}
+                                onClick={() => setOpen(false)}
+                                className="flex items-center gap-3 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors duration-200"
+                              >
+                                <FileText className="h-3 w-3" />
+                                {subLink.label}
+                              </Link>
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </li>
               );

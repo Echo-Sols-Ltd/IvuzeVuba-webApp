@@ -32,7 +32,7 @@ export default function PatientQueueList({
       name: "James Bond",
       description: "Chest pain",
       serviceDate: "2025-08-24",
-      imageUrl: "/man.png", // Fixed property name
+      imageUrl: "https://i.pravatar.cc/150?img=12",
       urgent: true,
     },
     {
@@ -40,7 +40,7 @@ export default function PatientQueueList({
       name: "Tyres Gibson",
       description: "Headache",
       serviceDate: "2025-08-25",
-      imageUrl: "/man.png", // Fixed property name
+      imageUrl: "https://i.pravatar.cc/150?img=33",
       urgent: false,
     },
     {
@@ -48,7 +48,7 @@ export default function PatientQueueList({
       name: "Jonathan Kuminga",
       description: "Fever",
       serviceDate: "2025-08-24",
-      imageUrl: "/man.png", // Fixed property name
+      imageUrl: "https://i.pravatar.cc/150?img=51",
       urgent: true,
     },
   ];
@@ -72,7 +72,7 @@ export default function PatientQueueList({
       <h3 className="text-base font-medium">Today</h3>
       {filteredPatients.length > 0 ? (
         filteredPatients.map((patient, idx) => (
-          <PatientCard key={idx} patient={patient} />
+          <PatientCard key={idx} patient={{ ...patient, image: patient.imageUrl }} />
         ))
       ) : (
         <p className="text-gray-500">No patients match your filters.</p>
