@@ -14,7 +14,7 @@ const DoctorLayout = ({ children }: { children: ReactNode }) => {
       </div>
 
       <div className="flex flex-1 mt-0.5">
-        <div className="fixed left-0 bottom-0">
+        <div className="fixed left-0 top-12 bottom-0">
           <Sidebar />
         </div>
         <main className="ml-64 mt-12 flex-1 overflow-y-auto p-4">

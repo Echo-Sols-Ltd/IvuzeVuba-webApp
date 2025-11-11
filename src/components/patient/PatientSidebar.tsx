@@ -81,7 +81,7 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
         } ${
           open
             ? "fixed inset-y-0 left-0 h-screen"
-            : "relative h-[calc(100vh-80px)] hidden md:flex"
+            : "fixed left-0 top-20 bottom-0 hidden md:flex"
         }`}
       >
         <div>
