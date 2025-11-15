@@ -22,6 +22,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { logout } from "@/lib/auth";
+import { ROUTES } from "@/lib/constants";
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -36,14 +38,26 @@ const Sidebar = () => {
     { label: "Pharmacy", href: "/manager/pharmacy", icon: LucideCross },
   ];
 
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const handleLogout = () => {
     setShowLogoutDialog(true);
   };
 
-  const confirmLogout = () => {
-    setShowLogoutDialog(false);
-    setOpen(false);
-    router.push("/");
+  const confirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      setShowLogoutDialog(false);
+      setOpen(false);
+      router.push(ROUTES.LOGIN);
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still redirect even if logout fails
+      router.push(ROUTES.LOGIN);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const cancelLogout = () => {
@@ -84,6 +98,7 @@ const Sidebar = () => {
                 <li key={idx}>
                   <Link
                     href={link.href}
+                    prefetch={true}
                     className={`flex items-center gap-3 px-4 py-2 text-sm rounded-r-md ${
                       isActive
                         ? "bg-[#E6F2FB] border-l-4 border-[#118CDB] font-medium text-gray-900"
@@ -129,14 +144,20 @@ const Sidebar = () => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={cancelLogout} className="flex-1">
+            <Button 
+              variant="outline" 
+              onClick={cancelLogout} 
+              className="flex-1"
+              disabled={isLoggingOut}
+            >
               Cancel
             </Button>
             <Button
               onClick={confirmLogout}
               className="flex-1 bg-red-600 hover:bg-red-700"
+              disabled={isLoggingOut}
             >
-              Yes, Logout
+              {isLoggingOut ? "Logging out..." : "Yes, Logout"}
             </Button>
           </DialogFooter>
         </DialogContent>

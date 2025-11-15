@@ -1,0 +1,130 @@
+// API Configuration
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+
+// API Endpoints
+export const API_ENDPOINTS = {
+    AUTH: {
+        LOGIN: `${API_BASE_URL}/api/auth/login`,
+        LOGOUT: `${API_BASE_URL}/api/auth/logout`,
+        REFRESH: `${API_BASE_URL}/api/auth/refresh`,
+        PATIENT_SIGNUP: `${API_BASE_URL}/api/auth/patient/signup`,
+        DOCTOR_SIGNUP: `${API_BASE_URL}/api/auth/doctor/signup`,
+        MANAGER_SIGNUP: `${API_BASE_URL}/api/auth/manager/signup`,
+        CHANGE_PASSWORD: `${API_BASE_URL}/api/auth/change-password`,
+        ENABLE_2FA: `${API_BASE_URL}/api/auth/2fa/enable`,
+        DISABLE_2FA: `${API_BASE_URL}/api/auth/2fa/disable`,
+        VERIFY_2FA: `${API_BASE_URL}/api/auth/2fa/verify`,
+    },
+    PATIENT: {
+        DASHBOARD: `${API_BASE_URL}/api/patient/dashboard/me`,
+        OVERVIEW: `${API_BASE_URL}/api/patient/overview/me`,
+        PROFILE: `${API_BASE_URL}/api/patient/profile/me`,
+        APPOINTMENTS: `${API_BASE_URL}/api/patient/appointments/me`,
+        CREATE_APPOINTMENT: `${API_BASE_URL}/api/patient/appointments/me`,
+        PRESCRIPTIONS: `${API_BASE_URL}/api/patient/prescriptions/me`,
+        WALLET: `${API_BASE_URL}/api/patient/wallet/me`,
+        TOPUP_WALLET: `${API_BASE_URL}/api/patient/wallet/topup/me`,
+        PAYMENTS: `${API_BASE_URL}/api/patient/payments/me`,
+        TRANSACTIONS: `${API_BASE_URL}/api/patient/transactions/me`,
+        DEPARTMENTS: `${API_BASE_URL}/api/patient/departments`,
+    },
+    DOCTOR: {
+        OVERVIEW: `${API_BASE_URL}/api/doctor/overview`,
+        QUEUE: `${API_BASE_URL}/api/doctor/queue`,
+        QUEUE_COUNT: `${API_BASE_URL}/api/doctor/queue/count`,
+        ADD_CONSULTATION: (appointmentId: string) => `${API_BASE_URL}/api/doctor/queue/add-consultation/${appointmentId}`,
+        ADD_REFERRAL: (appointmentId: string) => `${API_BASE_URL}/api/doctor/queue/add-referral/${appointmentId}`,
+        CHART: (appointmentId: string) => `${API_BASE_URL}/api/doctor/chart/${appointmentId}`,
+        ADD_NOTE: (appointmentId: string) => `${API_BASE_URL}/api/doctor/chart/add-note/${appointmentId}`,
+        ADD_PRESCRIPTION: `${API_BASE_URL}/api/doctor/chart/add-prescription`,
+        PAYMENTS: `${API_BASE_URL}/api/doctor/payments`,
+        PAYMENTS_TODAY: `${API_BASE_URL}/api/doctor/payments/todays`,
+        PAYMENTS_LAST_WEEK: `${API_BASE_URL}/api/doctor/payments/last-week`,
+        PAYMENTS_LAST_MONTH: `${API_BASE_URL}/api/doctor/payments/last-month`,
+        PAYMENTS_OVERALL: `${API_BASE_URL}/api/doctor/payment/over-all`,
+        PAYMENTS_PER_MONTH: `${API_BASE_URL}/api/doctor/payments/all-perMonth`,
+        CONSULTATIONS: `${API_BASE_URL}/api/doctor/consultations`,
+        CONSULTATIONS_TOTAL: `${API_BASE_URL}/api/doctor/consultations/get-total`,
+        CONSULTATIONS_BY_MONTH: `${API_BASE_URL}/api/doctor/consultations/get_byMonth`,
+        CONSULTATIONS_UNIQUE: `${API_BASE_URL}/api/doctor/consultations/get-unique`,
+        REFERRALS_OUTGOING: `${API_BASE_URL}/api/doctor/referrals/out-going`,
+        REFERRALS_INCOMING: `${API_BASE_URL}/api/doctor/referrals/in-coming`,
+        ADD_REFERRAL_TO_DOCTOR: (appointmentId: string, referedDoctorId: string) =>
+            `${API_BASE_URL}/api/doctor/referrals/add-referral/${appointmentId}/${referedDoctorId}`,
+    },
+    MANAGER: {
+        DASHBOARD: `${API_BASE_URL}/api/manager`,
+        OVERVIEW: `${API_BASE_URL}/api/manager/overview`,
+        QUEUE_STATS: `${API_BASE_URL}/api/manager/queue-stats`,
+        PHARMACY_STATS: `${API_BASE_URL}/api/manager/pharmacy-stats`,
+        NOTIFICATIONS: `${API_BASE_URL}/api/manager/notifications`,
+    },
+    STAFF: {
+        LIST: `${API_BASE_URL}/api/staff`,
+        CREATE: `${API_BASE_URL}/api/staff`,
+        UPDATE: (id: string) => `${API_BASE_URL}/api/staff/${id}`,
+        DEACTIVATE: (id: string) => `${API_BASE_URL}/api/staff/${id}/deactivate`,
+    },
+    DEPARTMENTS: {
+        LIST: `${API_BASE_URL}/api/departments`,
+        CREATE: `${API_BASE_URL}/api/departments`,
+        UPDATE: (id: string) => `${API_BASE_URL}/api/departments/${id}`,
+        DELETE: (id: string) => `${API_BASE_URL}/api/departments/${id}`,
+    },
+    HOSPITALS: {
+        LIST: `${API_BASE_URL}/api/hospitals`,
+    },
+    INVENTORY: {
+        LIST: `${API_BASE_URL}/api/inventory`,
+        CREATE: `${API_BASE_URL}/api/inventory`,
+        UPDATE: (id: string) => `${API_BASE_URL}/api/inventory/${id}`,
+        DELETE: (id: string) => `${API_BASE_URL}/api/inventory/${id}`,
+        REORDER: (id: string) => `${API_BASE_URL}/api/inventory/${id}/reorder`,
+        LOW_STOCK: `${API_BASE_URL}/api/inventory/low-stock`,
+        BY_STATUS: (status: string) => `${API_BASE_URL}/api/inventory/by-status/${status}`,
+    },
+    QUEUE: {
+        UNASSIGNED: `${API_BASE_URL}/api/queue/unassigned`,
+        ALL: `${API_BASE_URL}/api/queue/all`,
+        DELAYED: `${API_BASE_URL}/api/queue/delayed`,
+        ASSIGN_DOCTOR: `${API_BASE_URL}/api/queue/assign-doctor`,
+        AVAILABLE_DOCTORS: `${API_BASE_URL}/api/queue/available-doctors`,
+    },
+    USER: {
+        PROFILE: `${API_BASE_URL}/api/user/profile`,
+        UPDATE_PROFILE: `${API_BASE_URL}/api/user/profile`,
+    },
+};
+
+// Role-based routing configuration
+export const ROLE_ROUTES: Record<string, string> = {
+    PATIENT: '/patient/dashboard',
+    DOCTOR: '/doctor/overview',
+    MANAGER: '/manager',
+};
+
+// Storage keys
+export const STORAGE_KEYS = {
+    ACCESS_TOKEN: 'accessToken',
+    REFRESH_TOKEN: 'refreshToken',
+    USER_ROLE: 'userRole',
+    USER_EMAIL: 'userEmail',
+    USER_ID: 'userId',
+};
+
+// Helper function to get auth headers
+export const getAuthHeaders = () => {
+    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+    return {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+    };
+};
+
+// Helper function to handle API errors
+export const handleApiError = (error: unknown): string => {
+    if (error instanceof Error) {
+        return error.message;
+    }
+    return 'An unexpected error occurred';
+};

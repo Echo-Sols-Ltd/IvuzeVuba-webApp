@@ -90,18 +90,17 @@ export default function ReferralTable({ data }: { data?: Referral[] }) {
                 <td className="px-4 py-2">{r.specialist}</td>
                 <td className="px-4 py-2">{r.reason}</td>
                 <td
-                  className={`px-4 py-2 font-medium ${
-                    r.urgency === "Urgent"
+                  className={`px-4 py-2 font-medium ${r.urgency === "Urgent"
                       ? "text-red-600"
                       : r.urgency === "semi-urgent"
-                      ? "text-green-600"
-                      : "text-gray-600"
-                  }`}
+                        ? "text-green-600"
+                        : "text-gray-600"
+                    }`}
                 >
                   {r.urgency}
                 </td>
                 <td className="px-4 py-2">{r.status}</td>
-                <td className="px-4 py-2">                  
+                <td className="px-4 py-2">
                   <button
                     onClick={() =>
                       handleExport([r], `${r.patient.replace(/\s+/g, "_")}.xlsx`)

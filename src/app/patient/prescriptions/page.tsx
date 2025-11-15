@@ -60,98 +60,41 @@ const PrescriptionsPage = () => {
     { value: "pediatrics", label: "Pediatrics" },
   ];
 
-  const prescriptions: Prescription[] = [
-    {
-      id: "1",
-      name: "Amoxicillin",
-      status: "active",
-      prescribedDate: "2024-07-05",
-      location: "King Faisal",
-      duration: "2 weeks",
-      endDate: "2024-07-19",
-      dosage: "500 mg",
-      frequency: "3 times a day",
-      instructions: ["Taken with food", "Don't drink milk in the mean time"],
-      sideEffects: ["Nausea", "Stomach upset"],
-      prescribedBy: "Dr Sharma",
-      startDate: "2024-07-05",
-    },
-    {
-      id: "2",
-      name: "Ibuprofen",
-      status: "active",
-      prescribedDate: "2024-07-03",
-      location: "King Faisal",
-      duration: "1 week",
-      endDate: "2024-07-10",
-      dosage: "400 mg",
-      frequency: "2 times a day",
-      instructions: ["Take after meals", "Avoid alcohol"],
-      sideEffects: ["Dizziness", "Stomach irritation"],
-      prescribedBy: "Dr Sharma",
-      startDate: "2024-07-03",
-    },
-    {
-      id: "3",
-      name: "Paracetamol",
-      status: "completed",
-      prescribedDate: "2024-06-20",
-      location: "King Faisal",
-      duration: "5 days",
-      endDate: "2024-06-25",
-      dosage: "500 mg",
-      frequency: "4 times a day",
-      instructions: ["Take as needed for fever", "Stay hydrated"],
-      sideEffects: ["Rare side effects"],
-      prescribedBy: "Dr Sharma",
-      startDate: "2024-06-20",
-    },
-    {
-      id: "4",
-      name: "Omeprazole",
-      status: "completed",
-      prescribedDate: "2024-06-15",
-      location: "King Faisal",
-      duration: "2 weeks",
-      endDate: "2024-06-29",
-      dosage: "20 mg",
-      frequency: "Once daily",
-      instructions: ["Take on empty stomach", "Avoid late meals"],
-      sideEffects: ["Headache", "Diarrhea"],
-      prescribedBy: "Dr Sharma",
-      startDate: "2024-06-15",
-    },
-    {
-      id: "5",
-      name: "Cetirizine",
-      status: "expired",
-      prescribedDate: "2024-05-10",
-      location: "King Faisal",
-      duration: "1 month",
-      endDate: "2024-06-10",
-      dosage: "10 mg",
-      frequency: "Once daily",
-      instructions: ["Take in the evening", "Avoid driving if drowsy"],
-      sideEffects: ["Drowsiness", "Dry mouth"],
-      prescribedBy: "Dr Sharma",
-      startDate: "2024-05-10",
-    },
-    {
-      id: "6",
-      name: "Metformin",
-      status: "expired",
-      prescribedDate: "2024-05-01",
-      location: "King Faisal",
-      duration: "3 months",
-      endDate: "2024-08-01",
-      dosage: "500 mg",
-      frequency: "Twice daily",
-      instructions: ["Take with meals", "Monitor blood sugar"],
-      sideEffects: ["Nausea", "Diarrhea"],
-      prescribedBy: "Dr Sharma",
-      startDate: "2024-05-01",
-    },
-  ];
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPrescriptions = async () => {
+      try {
+        const { getPrescriptions } = await import("@/lib/patientApi");
+        const data = await getPrescriptions();
+        // Transform API data to match component format
+        const transformedPrescriptions: Prescription[] = data.map((p: any) => ({
+          id: p.id,
+          name: p.medicationName || "Unknown",
+          status: (p.status?.toLowerCase() || "active") as "active" | "completed" | "expired",
+          prescribedDate: new Date(p.prescribedDate).toLocaleDateString(),
+          location: "Hospital",
+          duration: p.duration || "N/A",
+          endDate: "N/A",
+          dosage: p.dosage || "N/A",
+          frequency: p.frequency || "N/A",
+          instructions: p.instructions ? p.instructions.split(',') : ["Follow doctor's advice"],
+          sideEffects: ["Consult doctor if side effects occur"],
+          prescribedBy: p.prescribedBy || "Doctor",
+          startDate: new Date(p.prescribedDate).toLocaleDateString(),
+        }));
+        setPrescriptions(transformedPrescriptions);
+      } catch (error) {
+        console.error('Error fetching prescriptions:', error);
+        setPrescriptions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPrescriptions();
+  }, []);
 
   const filteredPrescriptions = prescriptions.filter((prescription) => {
     const matchesDepartment =
@@ -248,6 +191,17 @@ const PrescriptionsPage = () => {
       </motion.div>
     </motion.div>
   );
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading prescriptions...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isMobile) {
     return (

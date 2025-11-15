@@ -21,6 +21,10 @@ import { Invoice, Transaction } from "@/components/patient/payments/types";
 const PaymentsPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedTab, setSelectedTab] = useState("pay-now");
+  const [payments, setPayments] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [wallet, setWallet] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -33,109 +37,88 @@ const PaymentsPage = () => {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const pendingInvoices: Invoice[] = [
-    {
-      id: "1",
-      hospital: "Kigali Hospital",
-      doctor: "Dr. Sarah Johnson",
-      serviceDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      amount: "150 000 rwf",
-      status: "pending",
-      serviceType: "General Consultation",
-    },
-    {
-      id: "2",
-      hospital: "Kigali Hospital",
-      doctor: "Dr. Sarah Johnson",
-      serviceDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      amount: "150 000 rwf",
-      status: "overdue",
-      serviceType: "General Consultation",
-    },
-    {
-      id: "3",
-      hospital: "Kigali Hospital",
-      doctor: "Dr. Sarah Johnson",
-      serviceDate: "2024-01-15",
-      dueDate: "2024-01-22",
-      amount: "150 000 rwf",
-      status: "pending",
-      serviceType: "General Consultation",
-    },
-  ];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { getPayments, getTransactions, getWallet } = await import("@/lib/patientApi");
+        
+        // Fetch data separately to handle individual failures
+        const paymentsData = await getPayments().catch(err => {
+          console.error('Payments fetch error:', err);
+          return [];
+        });
+        
+        const transactionsData = await getTransactions().catch(err => {
+          console.error('Transactions fetch error:', err);
+          return [];
+        });
+        
+        const walletData = await getWallet().catch(err => {
+          console.error('Wallet fetch error:', err);
+          return { balance: 0, currency: 'RWF' };
+        });
 
-  const transactions: Transaction[] = [
-    {
-      id: "1",
-      date: "2020-04-5",
-      description: "Wallet Topup",
-      subDescription: "Increase",
-      method: "MTN mobile money",
-      reference: "#REF123456789",
-      amount: "+150 000 frw",
-      status: "completed",
-      type: "credit",
-    },
-    {
-      id: "2",
-      date: "2020-04-5",
-      description: "King Faisal",
-      subDescription: "Dr John Doe",
-      method: "MTN mobile money",
-      reference: "#REF123456789",
-      amount: "-150 000 frw",
-      status: "completed",
-      type: "debit",
-    },
-    {
-      id: "3",
-      date: "2020-04-5",
-      description: "Wallet Topup",
-      subDescription: "Increase",
-      method: "MTN mobile money",
-      reference: "#REF123456789",
-      amount: "+150 000 frw",
-      status: "failed",
-      type: "credit",
-    },
-    {
-      id: "4",
-      date: "2020-04-5",
-      description: "Wallet Topup",
-      subDescription: "Increase",
-      method: "MTN mobile money",
-      reference: "#REF123456789",
-      amount: "+150 000 frw",
-      status: "completed",
-      type: "credit",
-    },
-    {
-      id: "5",
-      date: "2020-04-5",
-      description: "King Faisal",
-      subDescription: "Dr John Doe",
-      method: "MTN mobile money",
-      reference: "#REF123456789",
-      amount: "-150 000 frw",
-      status: "completed",
-      type: "debit",
-    },
-    {
-      id: "6",
-      date: "2020-04-5",
-      description: "Wallet Topup",
-      subDescription: "Increase",
-      method: "MTN mobile money",
-      reference: "#REF123456789",
-      amount: "+150 000 frw",
-      status: "completed",
-      type: "credit",
-    },
-  ];
+        setPayments(paymentsData);
+        
+        // Transform transactions safely
+        const transformedTransactions: Transaction[] = Array.isArray(transactionsData) 
+          ? transactionsData.map((t: any) => {
+              try {
+                return {
+                  id: String(t.id || Math.random()),
+                  date: t.date ? new Date(t.date).toLocaleDateString() : "N/A",
+                  description: String(t.description || "Transaction"),
+                  subDescription: t.type === "TOPUP" ? "Increase" : "Payment",
+                  method: String(t.method || "Mobile money"),
+                  reference: `#REF${String(t.id || '').substring(0, 8)}`,
+                  amount: `${t.amount >= 0 ? '+' : ''}${Number(t.amount || 0).toLocaleString()} RWF`,
+                  status: String(t.status || "completed").toLowerCase(),
+                  type: (t.amount >= 0 ? "credit" : "debit") as "credit" | "debit",
+                };
+              } catch (error) {
+                console.error('Error transforming transaction:', error);
+                return {
+                  id: String(Math.random()),
+                  date: "N/A",
+                  description: "Transaction",
+                  subDescription: "N/A",
+                  method: "N/A",
+                  reference: "#N/A",
+                  amount: "0 RWF",
+                  status: "completed",
+                  type: "credit" as const,
+                };
+              }
+            })
+          : [];
+        
+        setTransactions(transformedTransactions);
+        setWallet(walletData);
+      } catch (error) {
+        console.error('Error fetching payment data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const currentBalance = "150 000 rwf";
+    fetchData();
+  }, []);
+
+  // Transform payments to invoices
+  const pendingInvoices: Invoice[] = payments
+    .filter((p: any) => p.status === "pending" || p.status === "overdue")
+    .map((p: any) => ({
+      id: p.id,
+      hospital: "Hospital",
+      doctor: "Doctor",
+      serviceDate: new Date(p.date).toLocaleDateString(),
+      dueDate: new Date(p.date).toLocaleDateString(),
+      amount: `${p.amount.toLocaleString()} RWF`,
+      status: p.status as "pending" | "overdue",
+      serviceType: p.description || "Medical Service",
+    }));
+
+  const currentBalance = wallet ? `${wallet.balance.toLocaleString()} ${wallet.currency}` : "0 RWF";
 
   const handlePayNow = (invoiceId: string) => {
     console.log(`Processing payment for invoice ${invoiceId}`);
@@ -189,6 +172,17 @@ const PaymentsPage = () => {
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading payment data...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isMobile) {
     return (

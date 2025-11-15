@@ -4,22 +4,26 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { API_ENDPOINTS, ROLE_ROUTES, STORAGE_KEYS } from "@/lib/api";
+import { APP_NAME, MESSAGES, PLACEHOLDERS, ALT_TEXTS, ROUTES } from "@/lib/constants";
 
 interface FormData {
   email: string;
   password: string;
-  role: "patient" | "doctor" | "manager" | "";
   rememberMe: boolean;
+}
+
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  role: string;
+  email: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
 }
 
 export default function UnifiedLoginPage() {
@@ -27,39 +31,63 @@ export default function UnifiedLoginPage() {
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
-    role: "",
     rememberMe: false,
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleInputChange = (
     field: keyof FormData,
     value: string | boolean
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setError(""); // Clear error when user types
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-    if (!formData.role) {
-      alert("Please select your role");
-      return;
-    }
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          rememberMe: formData.rememberMe,
+        }),
+      });
 
-    // TODO: Replace with actual API call to /api/auth/login
-    console.log("Login submitted:", formData);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || MESSAGES.ERRORS.LOGIN_FAILED);
+      }
 
-    // Mock authentication - route based on role
-    const roleRoutes = {
-      patient: "/patient/dashboard",
-      doctor: "/doctor/overview",
-      manager: "/manager",
-    };
+      const data: LoginResponse = await response.json();
 
-    if (formData.email && formData.password && formData.role) {
-      router.push(roleRoutes[formData.role]);
-    } else {
-      alert("Invalid credentials");
+      // Store auth data
+      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, data.accessToken);
+      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, data.refreshToken);
+      localStorage.setItem(STORAGE_KEYS.USER_ROLE, data.role);
+      localStorage.setItem(STORAGE_KEYS.USER_EMAIL, data.email);
+      localStorage.setItem(STORAGE_KEYS.USER_ID, data.userId);
+
+      // Route based on role from backend
+      const route = ROLE_ROUTES[data.role.toUpperCase()];
+      if (route) {
+        router.push(route);
+      } else {
+        throw new Error(MESSAGES.ERRORS.INVALID_ROLE);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : MESSAGES.ERRORS.LOGIN_FAILED);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -71,42 +99,42 @@ export default function UnifiedLoginPage() {
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
             <Image
               src="/logo.svg"
-              alt="HealthLink Logo"
+              alt={ALT_TEXTS.LOGO}
               width={24}
               height={24}
               className="object-contain"
             />
           </div>
-          <span className="text-white text-xl font-semibold">HealthLink</span>
+          <span className="text-white text-xl font-semibold">{APP_NAME}</span>
         </div>
 
         <div className="flex-1 flex flex-col justify-center items-center text-center">
           <h1 className="text-3xl font-bold text-white mb-4 leading-tight">
-            Welcome to HealthLink Portal
+            {MESSAGES.LOGIN.WELCOME_TITLE}
           </h1>
           <p className="text-blue-100 text-lg leading-relaxed">
-            Access your personalized healthcare dashboard securely.
+            {MESSAGES.LOGIN.WELCOME_SUBTITLE}
           </p>
         </div>
 
         <div className="flex items-end justify-between">
           <Image
             src="/patients/boxImage.png"
-            alt="First Aid Kit"
+            alt={ALT_TEXTS.FIRST_AID_KIT}
             width={100}
             height={100}
             className="object-contain"
           />
           <Image
             src="/patients/doctorImage.png"
-            alt="Doctor"
+            alt={ALT_TEXTS.DOCTOR}
             width={180}
             height={180}
             className="object-contain"
           />
           <Image
             src="/patients/doctorTool.png"
-            alt="Stethoscope"
+            alt={ALT_TEXTS.STETHOSCOPE}
             width={90}
             height={90}
             className="object-contain"
@@ -127,31 +155,18 @@ export default function UnifiedLoginPage() {
 
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-gray-900">
-              Login to Your Portal
+              {MESSAGES.LOGIN.TITLE}
             </h2>
-            <p className="text-gray-600 mt-2">Select your role and sign in</p>
+            <p className="text-gray-600 mt-2">{MESSAGES.LOGIN.SUBTITLE}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="role" className="text-sm font-medium text-gray-700">
-                I am a
-              </Label>
-              <Select
-                value={formData.role}
-                onValueChange={(value) => handleInputChange("role", value)}
-              >
-                <SelectTrigger className="mt-1 w-full">
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="patient">Patient</SelectItem>
-                  <SelectItem value="doctor">Doctor</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                </SelectContent>
-              </Select>
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-600 text-sm">{error}</p>
             </div>
+          )}
 
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <Label htmlFor="email" className="text-sm font-medium text-gray-700">
                 Email
@@ -161,9 +176,10 @@ export default function UnifiedLoginPage() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="example@hospital.com"
+                placeholder={PLACEHOLDERS.EMAIL}
                 className="mt-1 w-full"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -171,15 +187,31 @@ export default function UnifiedLoginPage() {
               <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                 Password
               </Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => handleInputChange("password", e.target.value)}
-                placeholder="••••••••"
-                className="mt-1 w-full"
-                required
-              />
+              <div className="relative mt-1">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  placeholder={PLACEHOLDERS.PASSWORD}
+                  className="w-full pr-10"
+                  required
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  disabled={isLoading}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">
@@ -190,36 +222,38 @@ export default function UnifiedLoginPage() {
                   checked={formData.rememberMe}
                   onChange={(e) => handleInputChange("rememberMe", e.target.checked)}
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  disabled={isLoading}
                 />
                 <Label htmlFor="rememberMe" className="text-sm font-medium text-gray-700">
-                  Remember me
+                  {MESSAGES.LOGIN.REMEMBER_ME}
                 </Label>
               </div>
               <a
-                href="/auth/forgot-password"
+                href={ROUTES.FORGOT_PASSWORD}
                 className="text-blue-600 hover:text-blue-700 text-sm font-medium"
               >
-                Forgot password?
+                {MESSAGES.LOGIN.FORGOT_PASSWORD}
               </a>
             </div>
 
             <Button
               type="submit"
-              className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold"
+              className="w-full cursor-pointer bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
             >
-              LOGIN
-              <ArrowRight className="ml-2 w-5 h-5" />
+              {isLoading ? MESSAGES.LOGIN.LOADING_TEXT : MESSAGES.LOGIN.BUTTON_TEXT}
+              {!isLoading && <ArrowRight className="ml-2 w-5 h-5" />}
             </Button>
           </form>
 
           <div className="text-center mt-8">
             <p className="text-gray-600">
-              Don&apos;t have an account?{" "}
+              {MESSAGES.LOGIN.NO_ACCOUNT}{" "}
               <a
-                href="/patient/auth/register"
+                href={ROUTES.PATIENT_REGISTER}
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                Sign Up as Patient
+                {MESSAGES.LOGIN.SIGNUP_LINK}
               </a>
             </p>
           </div>

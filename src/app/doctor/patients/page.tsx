@@ -1,15 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Card from "@/components/doctor/Card";
 import { FilterByDate } from "@/components/doctor/patient-queue/FIlterByDate";
 import PatientQueueList from "@/components/doctor/patient-queue/PatientQueueList";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
+import { getQueueCount } from "@/lib/doctorApi";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 export default function PatientQueuePage() {
   const [search, setSearch] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [queueCount, setQueueCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchQueueCount = async () => {
+      try {
+        const count = await getQueueCount();
+        setQueueCount(count);
+      } catch (error) {
+        console.error('Error fetching queue count:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQueueCount();
+  }, []);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -29,7 +52,7 @@ export default function PatientQueuePage() {
           whileHover={{ scale: 1.05 }}
           transition={{ duration: 0.2 }}
         >
-          <Card total={12} title="Total in Queue" />
+          <Card total={queueCount} title="Total in Queue" />
         </motion.div>
       </motion.div>
 

@@ -1,3 +1,15 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import LoadingSpinner from "@/components/LoadingSpinner";
+
 export default function DoctorPage() {
-  return <h1>Hello Doctor</h1>;
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/doctor/overview");
+  }, [router]);
+
+  return <LoadingSpinner />;
 }

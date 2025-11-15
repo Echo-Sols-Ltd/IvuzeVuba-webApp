@@ -45,96 +45,50 @@ export default function ViewVisitsPage() {
     { id: "ophthalmology", name: "Ophthalmology" },
   ];
 
-  const visits = [
-    {
-      id: 1,
-      date: "2020-04-5",
-      facility: "King Faisal",
-      department: "Pediatrics",
-      doctor: "Dr John Doe",
-      diagnosis: "Heart follow up",
-      prescription: "penicilin 2",
-      payment: "150 000 rwf",
-      hasDownload: false,
-    },
-    {
-      id: 2,
-      date: "2020-04-5",
-      facility: "King Faisal",
-      department: "Pediatrics",
-      doctor: "Dr John Doe",
-      diagnosis: "Heart follow up",
-      prescription: "penicilin 2",
-      payment: "150 000 rwf",
-      hasDownload: false,
-    },
-    {
-      id: 3,
-      date: "2020-04-5",
-      facility: "King Faisal",
-      department: "Pediatrics",
-      doctor: "Dr John Doe",
-      diagnosis: "Heart follow up",
-      prescription: "penicilin 2",
-      payment: "150 000 rwf",
-      hasDownload: true,
-    },
-    {
-      id: 4,
-      date: "2020-04-5",
-      facility: "King Faisal",
-      department: "Pediatrics",
-      doctor: "Dr John Doe",
-      diagnosis: "Heart follow up",
-      prescription: "penicilin 2",
-      payment: "150 000 rwf",
-      hasDownload: true,
-    },
-    {
-      id: 5,
-      date: "2020-04-5",
-      facility: "King Faisal",
-      department: "Pediatrics",
-      doctor: "Dr John Doe",
-      diagnosis: "Heart follow up",
-      prescription: "penicilin 2",
-      payment: "150 000 rwf",
-      hasDownload: true,
-    },
-    {
-      id: 6,
-      date: "2020-04-5",
-      facility: "King Faisal",
-      department: "Pediatrics",
-      doctor: "Dr John Doe",
-      diagnosis: "Heart follow up",
-      prescription: "penicilin 2",
-      payment: "150 000 rwf",
-      hasDownload: true,
-    },
-    {
-      id: 7,
-      date: "2020-04-5",
-      facility: "King Faisal",
-      department: "Pediatrics",
-      doctor: "Dr John Doe",
-      diagnosis: "Heart follow up",
-      prescription: "penicilin 2",
-      payment: "150 000 rwf",
-      hasDownload: true,
-    },
-    {
-      id: 8,
-      date: "2020-04-5",
-      facility: "King Faisal",
-      department: "Pediatrics",
-      doctor: "Dr John Doe",
-      diagnosis: "Heart follow up",
-      prescription: "penicilin 2",
-      payment: "150 000 rwf",
-      hasDownload: true,
-    },
-  ];
+  const [visits, setVisits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchVisits = async () => {
+    try {
+      setLoading(true);
+      const { getAppointments } = await import("@/lib/patientApi");
+      const data = await getAppointments();
+      // Transform API data to match table format
+      const transformedVisits = data.map((apt: any, index: number) => ({
+        id: index + 1,
+        date: new Date(apt.preferredDate || apt.scheduledTime).toLocaleDateString(),
+        facility: "Hospital",
+        department: apt.departmentName || "N/A",
+        doctor: apt.doctorName || "Not assigned",
+        diagnosis: apt.reason || "N/A",
+        prescription: "N/A",
+        payment: "N/A",
+        hasDownload: apt.status === "COMPLETED",
+      }));
+      setVisits(transformedVisits);
+    } catch (error) {
+      console.error('Error fetching visits:', error);
+      setVisits([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchVisits();
+  }, []);
+
+  // Refresh data when page becomes visible (e.g., after creating a new visit)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchVisits();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   const filteredVisits = visits.filter((visit) => {
     const matchesDepartment =
@@ -172,6 +126,17 @@ export default function ViewVisitsPage() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Visits");
     XLSX.writeFile(workbook, "all_visits.xlsx");
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading visits...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isMobile) {
     return (
@@ -212,6 +177,14 @@ export default function ViewVisitsPage() {
                 />
               </div>
 
+              <Button
+                onClick={fetchVisits}
+                variant="outline"
+                className="w-full mb-2"
+                disabled={loading}
+              >
+                {loading ? "Refreshing..." : "Refresh"}
+              </Button>
               <Button
                 onClick={handleDownloadAll}
                 variant="outline"
@@ -368,6 +341,15 @@ export default function ViewVisitsPage() {
                       ))}
                     </SelectContent>
                   </Select>
+
+                  <Button
+                    onClick={fetchVisits}
+                    variant="outline"
+                    className="flex items-center gap-2"
+                    disabled={loading}
+                  >
+                    {loading ? "Refreshing..." : "Refresh"}
+                  </Button>
 
                   <Button
                     onClick={handleDownloadAll}

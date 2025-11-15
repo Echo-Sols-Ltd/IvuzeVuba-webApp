@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "@/components/doctor/Navbar";
 import PatientSidebar from "@/components/patient/PatientSidebar";
 import { Button } from "@/components/ui/button";
@@ -29,8 +30,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { createAppointment, getDepartments } from "@/lib/patientApi";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CreateVisitPage() {
+  const router = useRouter();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     department: "",
     reason: "",
@@ -38,6 +43,9 @@ export default function CreateVisitPage() {
   });
   const [isMobile, setIsMobile] = useState(false);
   const [date, setDate] = useState<Date>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableDepartments, setAvailableDepartments] = useState<any[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -49,6 +57,22 @@ export default function CreateVisitPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const depts = await getDepartments();
+        setAvailableDepartments(depts);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        // Use fallback departments if API fails
+      } finally {
+        setLoadingDepartments(false);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -56,53 +80,147 @@ export default function CreateVisitPage() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
+    
+    // Validation
+    if (!formData.department) {
+      toast({
+        title: "Error",
+        description: "Please select a department",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.reason.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a reason for your visit",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!date) {
+      toast({
+        title: "Error",
+        description: "Please select a preferred date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Find department name from ID
+      const selectedDept = departments.find(d => d.id === formData.department);
+      const departmentName = selectedDept?.name || formData.department;
+
+      // Format date as YYYY-MM-DD
+      const formattedDate = format(date, 'yyyy-MM-dd');
+
+      // Sanitize reason - replace special characters that backend might reject
+      const sanitizedReason = formData.reason
+        .replace(/'/g, "'")  // Replace smart quotes with regular apostrophe
+        .replace(/"/g, '"')  // Replace smart quotes with regular quotes
+        .replace(/[^\w\s.,!?-]/g, ''); // Remove other special characters except basic punctuation
+
+      await createAppointment({
+        departmentName: departmentName,
+        reason: sanitizedReason,
+        preferredDate: formattedDate,
+      });
+
+      toast({
+        title: "Success",
+        description: "Your appointment has been created successfully!",
+      });
+
+      // Redirect to visits page after success
+      setTimeout(() => {
+        router.push('/patient/visits');
+      }, 1500);
+    } catch (error: any) {
+      console.error('Error creating appointment:', error);
+      
+      // Parse backend validation errors
+      let errorMessage = "Failed to create appointment. Please try again.";
+      
+      if (error.message) {
+        try {
+          const errorData = JSON.parse(error.message);
+          if (errorData.fieldErrors && errorData.fieldErrors.length > 0) {
+            const fieldError = errorData.fieldErrors[0];
+            errorMessage = `${fieldError.field}: ${fieldError.message}`;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const departments = [
-    {
-      id: "general",
-      name: "General Medicine",
-      description: "General health consultations and check-ups",
-    },
-    {
-      id: "cardiology",
-      name: "Cardiology",
-      description: "Heart and cardiovascular health",
-    },
-    {
-      id: "dermatology",
-      name: "Dermatology",
-      description: "Skin conditions and treatments",
-    },
-    {
-      id: "orthopedics",
-      name: "Orthopedics",
-      description: "Bone and joint health",
-    },
-    {
-      id: "pediatrics",
-      name: "Pediatrics",
-      description: "Child healthcare services",
-    },
-    {
-      id: "neurology",
-      name: "Neurology",
-      description: "Nervous system disorders",
-    },
-    {
-      id: "psychiatry",
-      name: "Psychiatry",
-      description: "Mental health services",
-    },
-    {
-      id: "ophthalmology",
-      name: "Ophthalmology",
-      description: "Eye care and vision services",
-    },
-  ];
+  // Use API departments if available, otherwise fallback to hardcoded
+  const departments = availableDepartments.length > 0 
+    ? availableDepartments.map((dept: any) => ({
+        id: dept.id || dept.name,
+        name: dept.name,
+        description: dept.description || "Healthcare services",
+      }))
+    : [
+        {
+          id: "general",
+          name: "General Medicine",
+          description: "General health consultations and check-ups",
+        },
+        {
+          id: "cardiology",
+          name: "Cardiology",
+          description: "Heart and cardiovascular health",
+        },
+        {
+          id: "dermatology",
+          name: "Dermatology",
+          description: "Skin conditions and treatments",
+        },
+        {
+          id: "orthopedics",
+          name: "Orthopedics",
+          description: "Bone and joint health",
+        },
+        {
+          id: "pediatrics",
+          name: "Pediatrics",
+          description: "Child healthcare services",
+        },
+        {
+          id: "neurology",
+          name: "Neurology",
+          description: "Nervous system disorders",
+        },
+        {
+          id: "psychiatry",
+          name: "Psychiatry",
+          description: "Mental health services",
+        },
+        {
+          id: "ophthalmology",
+          name: "Ophthalmology",
+          description: "Eye care and vision services",
+        },
+      ];
 
   const experienceTips = [
     {
@@ -183,6 +301,9 @@ export default function CreateVisitPage() {
                     }
                     className="min-h-[100px] resize-none"
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Use simple text. Avoid special characters.
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -219,8 +340,9 @@ export default function CreateVisitPage() {
                 <Button
                   type="submit"
                   className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                  disabled={isSubmitting}
                 >
-                  Confirm and Join Queue
+                  {isSubmitting ? "Creating Appointment..." : "Confirm and Join Queue"}
                 </Button>
               </form>
             </div>
@@ -340,6 +462,9 @@ export default function CreateVisitPage() {
                         }
                         className="min-h-[120px] resize-none"
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Use simple text. Avoid special characters.
+                      </p>
                     </div>
 
                     <div className="space-y-2">

@@ -2,7 +2,11 @@
 
 import AddMedicationModal from "@/components/modals/AddMedicationModal";
 
-export default function PharmacyHeader() {
+interface PharmacyHeaderProps {
+  onRefresh?: () => void;
+}
+
+export default function PharmacyHeader({ onRefresh }: PharmacyHeaderProps) {
   return (
     <div className="flex justify-between items-center mb-6">
       <div>
@@ -10,7 +14,7 @@ export default function PharmacyHeader() {
         <p className="text-muted-foreground">Manage medical inventory</p>
       </div>
     
-      <AddMedicationModal />
+      <AddMedicationModal onSuccess={onRefresh} />
     </div>
   );
 }

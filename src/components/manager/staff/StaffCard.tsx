@@ -14,6 +14,9 @@ interface StaffCardProps {
   department: string;
   endDate: string;
   imageUrl: string;
+  isAvailable?: boolean;
+  specialization?: string;
+  onRefresh?: () => void;
 }
 
 export default function StaffCard({
@@ -25,6 +28,9 @@ export default function StaffCard({
   department,
   endDate,
   imageUrl,
+  isAvailable,
+  specialization,
+  onRefresh,
 }: StaffCardProps) {
   return (
     <Card className="shadow-sm">
@@ -61,10 +67,23 @@ export default function StaffCard({
 
         <div className="flex gap-2 mt-4">
           {/* Edit Modal */}
-          <EditUserModal userName={name} />
+          <EditUserModal 
+            staffId={id}
+            userName={name}
+            userEmail={email}
+            department={department}
+            specialization={specialization}
+            isAvailable={isAvailable}
+            onSuccess={onRefresh}
+          />
 
-          {/* Deactivate Modal */}
-          <DeactivateUserModal userName={name} />
+          {/* Deactivate/Activate Modal */}
+          <DeactivateUserModal 
+            staffId={id}
+            userName={name}
+            isActive={isAvailable}
+            onSuccess={onRefresh}
+          />
         </div>
       </CardContent>
     </Card>

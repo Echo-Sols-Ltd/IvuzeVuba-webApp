@@ -1,51 +1,99 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import InventoryFilters from "@/components/manager/pharmacy/InventoryFilters";
 import InventoryList from "@/components/manager/pharmacy/InventoryList";
 import InventoryStats from "@/components/manager/pharmacy/InventoryStats";
 import PharmacyHeader from "@/components/manager/pharmacy/PharmacyHeader";
+import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
-const allItems = [
-  {
-    name: "Amoxicillin 500mg",
-    type: "Antibiotic",
-    stock: "450/1000",
-    supplier: "PharmaCorp",
-    status: "In stock",
-    lastRestocked: "2024-07-05",
-  },
-  {
-    name: "Paracetamol 500mg",
-    type: "Painkiller",
-    stock: "320/800",
-    supplier: "HealthPlus",
-    status: "In stock",
-    lastRestocked: "2024-07-10",
-  },
-  {
-    name: "Ibuprofen 200mg",
-    type: "Painkiller",
-    stock: "0/600",
-    supplier: "MediSupply",
-    status: "Out of stock",
-    lastRestocked: "2024-06-28",
-  },
-];
+interface InventoryItem {
+  id: string;
+  medicineName: string;
+  category: string;
+  stockQuantity: number;
+  supplierName: string;
+  status: string;
+  lastRestocked: string;
+}
 
 export default function PharmacyPage() {
+  const [allItems, setAllItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    fetchInventory();
+  }, []);
+
+  const fetchInventory = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      const response = await fetch(API_ENDPOINTS.INVENTORY.LIST, {
+        headers: getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Inventory data:", data);
+        setAllItems(data);
+      } else {
+        setError("Failed to load inventory");
+      }
+    } catch (err) {
+      console.error("Error fetching inventory:", err);
+      setError("Failed to load inventory");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Apply search + filter
-  const filteredItems = allItems.filter((item) => {
-    const matchesType = filterType === "all" || item.type === filterType;
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.supplier.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesType && matchesSearch;
-  });
+  const filteredItems = allItems
+    .filter((item) => {
+      const matchesStatus = filterType === "all" || item.status === filterType;
+      const matchesSearch =
+        !searchQuery ||
+        (item.medicineName && item.medicineName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.supplierName && item.supplierName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesStatus && matchesSearch;
+    })
+    .map((item) => ({
+      name: item.medicineName || "Unknown",
+      type: item.category || "N/A",
+      stock: `${item.stockQuantity || 0}`,
+      supplier: item.supplierName || "Unknown",
+      status: item.status ? item.status.replace(/_/g, " ") : "Unknown",
+      lastRestocked: item.lastRestocked ? new Date(item.lastRestocked).toLocaleDateString() : "N/A",
+      id: item.id,
+    }));
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={fetchInventory}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -54,7 +102,7 @@ export default function PharmacyPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <PharmacyHeader />
+        <PharmacyHeader onRefresh={fetchInventory} />
       </motion.div>
 
       <motion.div
@@ -62,7 +110,7 @@ export default function PharmacyPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
-        <InventoryStats />
+        <InventoryStats onRefresh={fetchInventory} />
       </motion.div>
 
       <motion.div
@@ -92,7 +140,7 @@ export default function PharmacyPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
       >
-        <InventoryList items={filteredItems} />
+        <InventoryList items={filteredItems} onRefresh={fetchInventory} />
       </motion.div>
     </div>
   );

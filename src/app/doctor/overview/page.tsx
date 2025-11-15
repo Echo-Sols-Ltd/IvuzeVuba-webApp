@@ -1,89 +1,130 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Card from "@/components/doctor/Card";
 import TopQueue from "@/components/doctor/TopQueue";
 import NextInQueue from "@/components/doctor/NextQueue";
 import RecentNotifications from "@/components/doctor/RecentNotification";
 import CalendarCard from "@/components/doctor/CalendarCard";
-import Navbar from "@/components/doctor/Navbar";
-import Sidebar from "@/components/doctor/Sidebar";
-import { Chatbot } from "@/components/patient/Chatbot";
+import dynamic from "next/dynamic";
+import { useDoctorAuth } from "@/hooks/useAuth";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import { getQueueCount } from "@/lib/doctorApi";
+
+// Lazy load Chatbot for better performance
+const Chatbot = dynamic(() => import("@/components/patient/Chatbot").then(mod => ({ default: mod.Chatbot })), {
+  ssr: false,
+  loading: () => null,
+});
 
 const Page = () => {
+  const { isAuthenticated, isLoading } = useDoctorAuth();
+  const [queueCount, setQueueCount] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+  const [doctorName, setDoctorName] = useState<string>("Doctor");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const count = await getQueueCount();
+        setQueueCount(count);
+        
+        // Fetch doctor profile for name
+        const { API_ENDPOINTS, getAuthHeaders } = await import("@/lib/api");
+        const profileResponse = await fetch(API_ENDPOINTS.USER.PROFILE, {
+          headers: getAuthHeaders(),
+        });
+        
+        if (profileResponse.ok) {
+          const profile = await profileResponse.json();
+          const fullName = `${profile.firstName || ""} ${profile.lastName || ""}`.trim();
+          setDoctorName(fullName || "Doctor");
+        }
+      } catch (error) {
+        console.error('Error fetching overview data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated]);
+
+  if (isLoading || !isAuthenticated || loading) {
+    return <LoadingSpinner />;
+  }
+  
   const data = [
-    { title: "Waiting", total: 12 },
-    { title: "In consultation", total: 12 },
-    { title: "Referred", total: 12 },
-    { title: "Completed", total: 12 },
+    { title: "Total in Queue", total: queueCount },
+    { title: "In consultation", total: 0 },
+    { title: "Referred", total: 0 },
+    { title: "Completed", total: 0 },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <div className="flex pt-20">
-        <main className="flex-1 p-6">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h1 className="font-semibold text-2xl">Welcome back, John</h1>
-            <p className="text-gray-600">
-              Here&apos;s your health overview for today
-            </p>
-          </motion.div>
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h1 className="font-semibold text-2xl">Welcome back, Dr. {doctorName}</h1>
+        <p className="text-gray-600">
+          Here&apos;s your health overview for today
+        </p>
+      </motion.div>
 
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: { opacity: 0 },
+          visible: {
+            opacity: 1,
+            transition: {
+              staggerChildren: 0.1
+            }
+          }
+        }}
+      >
+        {data.map((item, idx) => (
           <motion.div 
-            className="flex gap-4 mt-6"
-            initial="hidden"
-            animate="visible"
+            key={idx}
             variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.1
-                }
-              }
+              hidden: { opacity: 0, y: 20 },
+              visible: { opacity: 1, y: 0 }
             }}
+            whileHover={{ scale: 1.05 }}
           >
-            {data.map((item, idx) => (
-              <motion.div 
-                key={idx} 
-                className="flex-1"
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0 }
-                }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <Card title={item.title} total={item.total} />
-              </motion.div>
-            ))}
+            <Card title={item.title} total={item.total} />
           </motion.div>
+        ))}
+      </motion.div>
 
-          <motion.div 
-            className="flex gap-4 mt-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <TopQueue />
-            <NextInQueue />
-          </motion.div>
+      <motion.div 
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+      >
+        <TopQueue />
+        <NextInQueue />
+      </motion.div>
 
-          <motion.div 
-            className="flex gap-4 mt-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-          >
-            <RecentNotifications />
-            <CalendarCard />
-          </motion.div>
-        </main>
-      </div>
+      <motion.div 
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.6 }}
+      >
+        <RecentNotifications />
+        <CalendarCard />
+      </motion.div>
+      
       <Chatbot />
     </div>
   );

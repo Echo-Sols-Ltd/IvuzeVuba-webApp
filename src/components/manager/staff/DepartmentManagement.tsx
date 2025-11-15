@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Plus, Search, Users, Edit, Trash2, Building2 } from "lucide-react";
 import AddDepartmentModal from "@/components/modals/AddDepartmentModal";
+import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface Department {
   id: string;
@@ -17,60 +19,111 @@ interface Department {
   color: string;
 }
 
+const colorOptions = [
+  "bg-blue-500",
+  "bg-pink-500",
+  "bg-red-500",
+  "bg-purple-500",
+  "bg-green-500",
+  "bg-yellow-500",
+  "bg-indigo-500",
+  "bg-orange-500",
+];
+
 export default function DepartmentManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const departments: Department[] = [
-    {
-      id: "dept001",
-      name: "Cardiology",
-      head: "Dr. Michael Porter",
-      staffCount: 12,
-      description: "Heart and cardiovascular system care",
-      color: "bg-blue-500",
-    },
-    {
-      id: "dept002",
-      name: "Pediatrics",
-      head: "Dr. Sarah Johnson",
-      staffCount: 8,
-      description: "Medical care for infants, children, and adolescents",
-      color: "bg-pink-500",
-    },
-    {
-      id: "dept003",
-      name: "Emergency",
-      head: "Dr. James Wilson",
-      staffCount: 15,
-      description: "24/7 emergency medical services",
-      color: "bg-red-500",
-    },
-    {
-      id: "dept004",
-      name: "Radiology",
-      head: "Dr. Emily Chen",
-      staffCount: 6,
-      description: "Medical imaging and diagnostics",
-      color: "bg-purple-500",
-    },
-    {
-      id: "dept005",
-      name: "Surgery",
-      head: "Dr. Robert Martinez",
-      staffCount: 10,
-      description: "Surgical procedures and operations",
-      color: "bg-green-500",
-    },
-    {
-      id: "dept006",
-      name: "Laboratory",
-      head: "Dr. Lisa Anderson",
-      staffCount: 7,
-      description: "Medical testing and analysis",
-      color: "bg-yellow-500",
-    },
-  ];
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
+      console.log("Fetching departments from:", API_ENDPOINTS.DEPARTMENTS.LIST);
+      console.log("Auth headers:", getAuthHeaders());
+      
+      const response = await fetch(API_ENDPOINTS.DEPARTMENTS.LIST, {
+        headers: getAuthHeaders(),
+      });
+
+      console.log("Response status:", response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Departments data received:", data);
+        console.log("Number of departments:", data.length);
+        
+        // Transform backend data to frontend format
+        const transformedDepts = data.map((dept: any, index: number) => ({
+          id: dept.id,
+          name: dept.name,
+          head: dept.head || "Not Assigned",
+          staffCount: dept.staffCount || 0,
+          description: dept.description || "No description available",
+          color: colorOptions[index % colorOptions.length],
+        }));
+        
+        console.log("Transformed departments:", transformedDepts);
+        setDepartments(transformedDepts);
+      } else {
+        const errorText = await response.text();
+        console.error("Failed to fetch departments:", response.status, errorText);
+        toast({
+          title: "Error",
+          description: `Failed to load departments: ${errorText}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching departments:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load departments",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this department?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(API_ENDPOINTS.DEPARTMENTS.DELETE(id), {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Department deleted successfully",
+        });
+        fetchDepartments();
+      } else {
+        const error = await response.text();
+        toast({
+          title: "Error",
+          description: error || "Failed to delete department",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete department",
+        variant: "destructive",
+      });
+    }
+  };
 
   const filteredDepartments = departments.filter((dept) =>
     dept.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -139,7 +192,9 @@ export default function DepartmentManagement() {
             <div>
               <p className="text-sm text-gray-600">Avg Staff/Dept</p>
               <p className="text-2xl font-bold text-gray-800">
-                {Math.round(departments.reduce((acc, dept) => acc + dept.staffCount, 0) / departments.length)}
+                {departments.length > 0 
+                  ? Math.round(departments.reduce((acc, dept) => acc + dept.staffCount, 0) / departments.length)
+                  : 0}
               </p>
             </div>
             <Users className="h-8 w-8 text-purple-500" />
@@ -166,25 +221,16 @@ export default function DepartmentManagement() {
       {/* Departments Grid */}
       <motion.div 
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
-        initial="hidden"
-        animate="visible"
-        variants={{
-          hidden: { opacity: 0 },
-          visible: {
-            opacity: 1,
-            transition: {
-              staggerChildren: 0.1
-            }
-          }
-        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
       >
         {filteredDepartments.map((dept) => (
           <motion.div
             key={dept.id}
-            variants={{
-              hidden: { opacity: 0, y: 20 },
-              visible: { opacity: 1, y: 0 }
-            }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
           >
             <Card className="p-6 hover:shadow-xl transition-all duration-300 border-t-4 relative overflow-hidden group">
@@ -205,7 +251,12 @@ export default function DepartmentManagement() {
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-blue-50">
                     <Edit className="h-4 w-4 text-blue-600" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-red-50">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 hover:bg-red-50"
+                    onClick={() => handleDelete(dept.id)}
+                  >
                     <Trash2 className="h-4 w-4 text-red-600" />
                   </Button>
                 </div>
@@ -250,7 +301,11 @@ export default function DepartmentManagement() {
 
       <AddDepartmentModal 
         isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)} 
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={() => {
+          setIsAddModalOpen(false);
+          fetchDepartments();
+        }}
       />
     </div>
   );

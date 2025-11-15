@@ -13,24 +13,67 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Building2 } from "lucide-react";
+import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddDepartmentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function AddDepartmentModal({ isOpen, onClose }: AddDepartmentModalProps) {
+export default function AddDepartmentModal({ isOpen, onClose, onSuccess }: AddDepartmentModalProps) {
   const [formData, setFormData] = useState({
     name: "",
-    head: "",
     description: "",
   });
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Creating department:", formData);
-    onClose();
-    setFormData({ name: "", head: "", description: "" });
+    
+    if (!formData.name || !formData.description) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(API_ENDPOINTS.DEPARTMENTS.CREATE, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: "Department created successfully",
+        });
+        setFormData({ name: "", description: "" });
+        onSuccess?.();
+      } else {
+        const error = await response.text();
+        toast({
+          title: "Error",
+          description: error || "Failed to create department",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create department",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,20 +108,6 @@ export default function AddDepartmentModal({ isOpen, onClose }: AddDepartmentMod
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="head" className="text-sm font-medium text-gray-700">
-              Department Head <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="head"
-              placeholder="e.g., Dr. John Smith"
-              value={formData.head}
-              onChange={(e) => setFormData({ ...formData, head: e.target.value })}
-              className="h-11"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="description" className="text-sm font-medium text-gray-700">
               Description <span className="text-red-500">*</span>
             </Label>
@@ -94,11 +123,11 @@ export default function AddDepartmentModal({ isOpen, onClose }: AddDepartmentMod
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose} className="px-6">
+            <Button type="button" variant="outline" onClick={onClose} className="px-6" disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" className="px-6 bg-blue-600 hover:bg-blue-700">
-              Add Department
+            <Button type="submit" className="px-6 bg-blue-600 hover:bg-blue-700" disabled={loading}>
+              {loading ? "Creating..." : "Add Department"}
             </Button>
           </div>
         </form>
