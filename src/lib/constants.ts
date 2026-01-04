@@ -3,15 +3,26 @@
 // App branding
 export const APP_NAME = 'HealthLink';
 
+// API Configuration
+export const API_BASE_URL = 'http://localhost:8081';
+
 // Routes
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/auth/login',
   FORGOT_PASSWORD: '/auth/forgot-password',
   PATIENT_REGISTER: '/patient/auth/register',
+  PATIENT_VERIFY_EMAIL: '/patient/auth/verify-email',
   PATIENT_DASHBOARD: '/patient/dashboard',
   DOCTOR_OVERVIEW: '/doctor/overview',
   MANAGER_DASHBOARD: '/manager',
+};
+
+// API Endpoints
+export const API_ENDPOINTS = {
+  PATIENT_SIGNUP: '/api/auth/patient/signup',
+  PATIENT_VERIFY_EMAIL: '/api/auth/patient/verify-email',
+  LOGIN: '/api/auth/login',
 };
 
 // UI Messages

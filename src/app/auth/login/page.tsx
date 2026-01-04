@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, CheckCircle } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { API_ENDPOINTS, ROLE_ROUTES, STORAGE_KEYS } from "@/lib/api";
 import { APP_NAME, MESSAGES, PLACEHOLDERS, ALT_TEXTS, ROUTES } from "@/lib/constants";
 
@@ -28,6 +28,7 @@ interface LoginResponse {
 
 export default function UnifiedLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -36,6 +37,17 @@ export default function UnifiedLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showVerificationSuccess, setShowVerificationSuccess] = useState(false);
+
+  useEffect(() => {
+    // Check if user came from email verification
+    const verified = searchParams.get("verified");
+    if (verified === "true") {
+      setShowVerificationSuccess(true);
+      // Hide the success message after 5 seconds
+      setTimeout(() => setShowVerificationSuccess(false), 5000);
+    }
+  }, [searchParams]);
 
   const handleInputChange = (
     field: keyof FormData,
@@ -159,6 +171,16 @@ export default function UnifiedLoginPage() {
             </h2>
             <p className="text-gray-600 mt-2">{MESSAGES.LOGIN.SUBTITLE}</p>
           </div>
+
+          {showVerificationSuccess && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="text-green-800 font-medium">Email verified successfully!</p>
+                <p className="text-green-700 text-sm">You can now log in to your account.</p>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
