@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface UpcomingAppointmentCardProps {
   hospital: string;
@@ -24,8 +25,10 @@ export const UpcomingAppointmentCard = ({ hospital, date, department, doctor }: 
         </p>
       </div>
     </div>
-    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-      Create new appointment
-    </Button>
+    <Link href="/patient/visits/create">
+      <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+        Create new appointment
+      </Button>
+    </Link>
   </div>
 );

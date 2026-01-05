@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import StaffTabs from "@/components/manager/staff/StaffTabs";
 import StaffList from "@/components/manager/staff/StaffList";
@@ -37,12 +37,9 @@ export default function StaffPage() {
   const [error, setError] = useState("");
   const [filterValue, setFilterValue] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
-
-  const fetchStaff = async () => {
+  const fetchStaff = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -53,18 +50,22 @@ export default function StaffPage() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Staff data:", data);
         setStaffData(data);
       } else {
         setError("Failed to load staff data");
       }
-    } catch (err) {
-      console.error("Error fetching staff:", err);
-      setError("Failed to load staff data");
+    } catch (err: unknown) {
+      const error = err as Error;
+      console.error("Error fetching staff:", error);
+      setError(error.message || "Failed to load staff data");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchStaff();
+  }, [fetchStaff]);
 
   const filterOptions = [
     { value: "all", label: "All Staff" },
@@ -133,7 +134,6 @@ export default function StaffPage() {
         <PageHeader
           title="Users & Staff Management"
           description="Manage staff directory and user accounts"
-          action={<AddUserModal onSuccess={fetchStaff} />}
         />
       </motion.div>
 
@@ -143,8 +143,9 @@ export default function StaffPage() {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <StaffTabs
+          onAddUser={() => setIsAddUserModalOpen(true)}
           staffContent={
-            <div>
+            <div className="space-y-4">
               <FiltersBar
                 filterLabel="Filter by Availability"
                 filterOptions={filterOptions}
@@ -158,6 +159,15 @@ export default function StaffPage() {
             </div>
           }
           departmentContent={<DepartmentManagement />}
+        />
+        
+        <AddUserModal 
+          isOpen={isAddUserModalOpen}
+          onClose={() => setIsAddUserModalOpen(false)}
+          onSuccess={() => {
+            fetchStaff();
+            setIsAddUserModalOpen(false);
+          }}
         />
       </motion.div>
     </div>

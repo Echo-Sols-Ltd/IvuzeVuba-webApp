@@ -53,18 +53,27 @@ export default function ViewVisitsPage() {
       setLoading(true);
       const { getAppointments } = await import("@/lib/patientApi");
       const data = await getAppointments();
+      console.log('Fetched appointments:', data); // Debug log
+      
       // Transform API data to match table format
       const transformedVisits = data.map((apt: any, index: number) => ({
-        id: index + 1,
-        date: new Date(apt.preferredDate || apt.scheduledTime).toLocaleDateString(),
+        id: apt.id || `apt-${index + 1}`,
+        date: apt.scheduledTime 
+          ? new Date(apt.scheduledTime).toLocaleDateString() 
+          : apt.preferredDate 
+            ? new Date(apt.preferredDate).toLocaleDateString()
+            : 'N/A',
         facility: "Hospital",
         department: apt.departmentName || "N/A",
-        doctor: apt.doctorName || "Not assigned",
-        diagnosis: apt.reason || "N/A",
-        prescription: "N/A",
-        payment: "N/A",
-        hasDownload: apt.status === "COMPLETED",
+        doctor: apt.doctorName || apt.assignedDoctorName || "Not assigned yet",
+        diagnosis: apt.reason || apt.diagnosis || "N/A",
+        prescription: apt.prescriptionId ? "View Prescription" : "N/A",
+        payment: apt.paymentStatus || "N/A",
+        status: apt.status || "PENDING",
+        hasDownload: apt.status === "COMPLETED" || apt.status === "COMPLETE",
       }));
+      
+      console.log('Transformed visits:', transformedVisits); // Debug log
       setVisits(transformedVisits);
     } catch (error) {
       console.error('Error fetching visits:', error);
@@ -238,8 +247,26 @@ export default function ViewVisitsPage() {
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {visit.department}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {visit.doctor}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              visit.doctor === 'Not assigned yet' 
+                                ? 'bg-yellow-100 text-yellow-800' 
+                                : 'bg-green-100 text-green-800'
+                            }`}>
+                              {visit.status === 'PENDING' && !visit.doctorName ? (
+                                <span className="flex items-center">
+                                  <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1.5"></span>
+                                  Not assigned yet
+                                </span>
+                              ) : (
+                                <span className="flex items-center">
+                                  <span className="w-2 h-2 rounded-full bg-green-500 mr-1.5"></span>
+                                  {visit.doctor}
+                                </span>
+                              )}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {visit.diagnosis}
@@ -415,8 +442,26 @@ export default function ViewVisitsPage() {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {visit.department}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {visit.doctor}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                                visit.doctor === 'Not assigned yet' 
+                                  ? 'bg-yellow-100 text-yellow-800' 
+                                  : 'bg-green-100 text-green-800'
+                              }`}>
+                                {visit.status === 'PENDING' && !visit.doctorName ? (
+                                  <span className="flex items-center">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-2"></span>
+                                    Not assigned yet
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-green-500 mr-2"></span>
+                                    {visit.doctor}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {visit.diagnosis}

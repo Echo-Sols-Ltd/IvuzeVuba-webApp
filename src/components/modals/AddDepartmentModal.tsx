@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,27 +16,59 @@ import { Building2 } from "lucide-react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
+export interface DepartmentFormData {
+  id?: string;
+  name: string;
+  description: string;
+  headId?: string;
+}
+
 interface AddDepartmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  department?: DepartmentFormData | null;
 }
 
-export default function AddDepartmentModal({ isOpen, onClose, onSuccess }: AddDepartmentModalProps) {
-  const [formData, setFormData] = useState({
+export default function AddDepartmentModal({ 
+  isOpen, 
+  onClose, 
+  onSuccess, 
+  department 
+}: AddDepartmentModalProps) {
+  const [formData, setFormData] = useState<DepartmentFormData>({
     name: "",
     description: "",
+    headId: "",
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Update form data when department prop changes
+  useEffect(() => {
+    if (department) {
+      setFormData({
+        id: department.id,
+        name: department.name,
+        description: department.description || '',
+        headId: department.headId || ''
+      });
+    } else {
+      setFormData({
+        name: "",
+        description: "",
+        headId: ""
+      });
+    }
+  }, [department]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.description) {
+    if (!formData.name) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Department name is required",
         variant: "destructive",
       });
       return;
@@ -44,26 +76,34 @@ export default function AddDepartmentModal({ isOpen, onClose, onSuccess }: AddDe
 
     setLoading(true);
     try {
-      const response = await fetch(API_ENDPOINTS.DEPARTMENTS.CREATE, {
-        method: "POST",
+      const isEdit = !!formData.id;
+      const url = isEdit 
+        ? API_ENDPOINTS.DEPARTMENTS.UPDATE(formData.id as string)
+        : API_ENDPOINTS.DEPARTMENTS.CREATE;
+      
+      const method = isEdit ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
         headers: getAuthHeaders(),
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          description: formData.description,
+          headId: formData.headId || null,
+        }),
       });
 
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Department created successfully",
+          description: `Department ${isEdit ? 'updated' : 'created'} successfully`,
         });
-        setFormData({ name: "", description: "" });
+        setFormData({ name: "", description: "", headId: "" });
         onSuccess?.();
+        onClose();
       } else {
         const error = await response.text();
-        toast({
-          title: "Error",
-          description: error || "Failed to create department",
-          variant: "destructive",
-        });
+        throw new Error(error || 'Failed to save department');
       }
     } catch (error) {
       toast({
@@ -85,9 +125,13 @@ export default function AddDepartmentModal({ isOpen, onClose, onSuccess }: AddDe
               <Building2 className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <DialogTitle className="text-xl">Add New Department</DialogTitle>
+              <DialogTitle className="text-xl">
+                {formData.id ? 'Edit Department' : 'Add New Department'}
+              </DialogTitle>
               <DialogDescription className="text-sm">
-                Create a new department and assign a department head
+                {formData.id 
+                  ? 'Update department details and assign a department head'
+                  : 'Create a new department and assign a department head'}
               </DialogDescription>
             </div>
           </div>
@@ -126,8 +170,10 @@ export default function AddDepartmentModal({ isOpen, onClose, onSuccess }: AddDe
             <Button type="button" variant="outline" onClick={onClose} className="px-6" disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" className="px-6 bg-blue-600 hover:bg-blue-700" disabled={loading}>
-              {loading ? "Creating..." : "Add Department"}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading 
+                ? formData.id ? 'Updating...' : 'Creating...' 
+                : formData.id ? 'Update Department' : 'Create Department'}
             </Button>
           </div>
         </form>

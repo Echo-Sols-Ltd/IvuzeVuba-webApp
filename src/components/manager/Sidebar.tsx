@@ -4,11 +4,11 @@ import {
   Calendar,
   LayoutDashboard,
   Menu,
-  HelpCircle,
+  Settings,
   LogOut,
-  LucideCross,
   Users,
   X,
+  Cross,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ const Sidebar = () => {
     { label: "Overview", href: "/manager", icon: LayoutDashboard },
     { label: "Patient Queues", href: "/manager/patients", icon: Calendar },
     { label: "Staff", href: "/manager/staff", icon: Users },
-    { label: "Pharmacy", href: "/manager/pharmacy", icon: LucideCross },
+    { label: "Pharmacy", href: "/manager/pharmacy", icon: Cross },
   ];
 
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -69,66 +69,78 @@ const Sidebar = () => {
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setOpen(true)}
-        className="md:hidden fixed z-50 p-2 bg-white border rounded-md shadow-md"
+        className="md:hidden fixed z-50 p-3 bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
       >
-        <Menu className="h-5 w-5" />
+        <Menu className="h-5 w-5 text-gray-700" />
       </button>
 
       {/* Sidebar */}
       <div
-        className={`h-[93vh] w-64 bg-white border-r flex flex-col justify-between z-40 transform transition-transform duration-300 
+        className={`h-screen w-64 bg-gradient-to-b from-white to-gray-50/50 border-r border-gray-200/60 flex flex-col justify-between z-40 transform transition-all duration-300 backdrop-blur-sm shadow-lg
         ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
         {/* Header */}
-        <div>
-          <div className="flex items-center justify-between px-4 py-4 border-b">
-            <h1 className="font-semibold text-lg">Manager Portal</h1>
-            <button onClick={() => setOpen(false)} className="md:hidden">
+        <div className="pt-16">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#118CDB] rounded-lg flex items-center justify-center">
+                <Users className="h-4 w-4 text-white" />
+              </div>
+              <h1 className="font-bold text-base text-gray-900">Manager Portal</h1>
+            </div>
+            <button 
+              onClick={() => setOpen(false)} 
+              className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <X className="h-5 w-5 text-gray-700" />
             </button>
           </div>
 
           {/* Navigation Links */}
-          <ul className="mt-2">
+          <nav className="mt-3 px-3">
             {links.map((link, idx) => {
               const isActive = pathname === link.href;
               const Icon = link.icon;
 
               return (
-                <li key={idx}>
+                <div key={idx} className="mb-1">
                   <Link
                     href={link.href}
                     prefetch={true}
-                    className={`flex items-center gap-3 px-4 py-2 text-sm rounded-r-md ${
+                    className={`flex items-center gap-3 px-3 py-3 text-sm rounded-xl transition-all duration-200 group ${
                       isActive
-                        ? "bg-[#E6F2FB] border-l-4 border-[#118CDB] font-medium text-gray-900"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-[#118CDB] text-white shadow-lg shadow-blue-500/25"
+                        : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
-                    {link.label}
+                    <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700"}`} />
+                    <span className="font-medium">{link.label}</span>
                   </Link>
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </nav>
         </div>
 
         {/* Footer */}
-        <div className="border-t px-4 py-3">
+        <div className="border-t border-gray-200/60 p-3 space-y-2">
           <Link
             href="/manager/settings"
-            className="flex items-center gap-3 text-sm text-gray-700 hover:bg-gray-100 px-2 py-2 rounded-md"
+            className={`flex items-center gap-3 text-sm px-3 py-2 rounded-lg transition-all duration-200 group ${
+              pathname === "/manager/settings"
+                ? "bg-gray-100 text-gray-900"
+                : "text-gray-600 hover:bg-gray-100/60 hover:text-gray-900"
+            }`}
           >
-            <HelpCircle className="h-4 w-4" />
-            Settings
+            <Settings className="h-4 w-4 flex-shrink-0 text-gray-500 group-hover:text-gray-700" />
+            <span className="font-medium">Settings</span>
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 text-sm text-gray-700 hover:bg-gray-100 px-2 py-2 rounded-md mt-2 w-full"
+            className="flex items-center gap-3 text-sm px-3 py-2 rounded-lg transition-all duration-200 w-full text-gray-600 hover:bg-red-50 hover:text-red-600 group"
           >
-            <LogOut className="h-4 w-4" />
-            Logout
+            <LogOut className="h-4 w-4 flex-shrink-0 text-gray-500 group-hover:text-red-500" />
+            <span className="font-medium">Logout</span>
           </button>
         </div>
       </div>

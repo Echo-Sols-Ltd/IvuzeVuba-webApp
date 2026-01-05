@@ -1,22 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Plus, Search, Users, Edit, Trash2, Building2 } from "lucide-react";
-import AddDepartmentModal from "@/components/modals/AddDepartmentModal";
+import { Plus, Search, Users, Edit2, Trash2, Building2 } from "lucide-react";
+import AddDepartmentModal, { DepartmentFormData } from "@/components/modals/AddDepartmentModal";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+
+interface DepartmentHead {
+  id: string;
+  name: string;
+  email?: string;
+}
 
 interface Department {
   id: string;
   name: string;
-  head: string;
+  head: DepartmentHead | string;
   staffCount: number;
   description: string;
-  color: string;
+  color?: string;
 }
 
 const colorOptions = [
@@ -32,43 +38,58 @@ const colorOptions = [
 
 export default function DepartmentManagement() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentDepartment, setCurrentDepartment] = useState<DepartmentFormData | null>(null);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
+  const handleEdit = (dept: Department) => {
+    setCurrentDepartment({
+      id: dept.id,
+      name: dept.name,
+      description: dept.description,
+      headId: typeof dept.head === 'string' ? '' : dept.head?.id || '',
+      staffCount: dept.staffCount
+    });
+    setIsModalOpen(true);
+  };
 
-  const fetchDepartments = async () => {
+  const handleAddNew = () => {
+    setCurrentDepartment(null);
+    setIsModalOpen(true);
+  };
+
+  const fetchDepartments = useCallback(async () => {
     try {
       setLoading(true);
-      console.log("Fetching departments from:", API_ENDPOINTS.DEPARTMENTS.LIST);
-      console.log("Auth headers:", getAuthHeaders());
-      
       const response = await fetch(API_ENDPOINTS.DEPARTMENTS.LIST, {
         headers: getAuthHeaders(),
       });
 
-      console.log("Response status:", response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log("Departments data received:", data);
-        console.log("Number of departments:", data.length);
+        const transformedDepts = data.map((dept: any, index: number) => {
+          const head = dept.head 
+            ? typeof dept.head === 'string' 
+              ? dept.head 
+              : { 
+                  id: dept.head.id || '', 
+                  name: dept.head.name || 'Unassigned',
+                  email: dept.head.email
+                }
+            : 'Not Assigned';
+            
+          return {
+            id: dept.id,
+            name: dept.name,
+            head: head,
+            staffCount: dept.staffCount || 0,
+            description: dept.description || "No description available",
+            color: colorOptions[index % colorOptions.length],
+          };
+        });
         
-        // Transform backend data to frontend format
-        const transformedDepts = data.map((dept: any, index: number) => ({
-          id: dept.id,
-          name: dept.name,
-          head: dept.head || "Not Assigned",
-          staffCount: dept.staffCount || 0,
-          description: dept.description || "No description available",
-          color: colorOptions[index % colorOptions.length],
-        }));
-        
-        console.log("Transformed departments:", transformedDepts);
         setDepartments(transformedDepts);
       } else {
         const errorText = await response.text();
@@ -79,8 +100,8 @@ export default function DepartmentManagement() {
           variant: "destructive",
         });
       }
-    } catch (error) {
-      console.error("Error fetching departments:", error);
+    } catch (err) {
+      console.error("Error fetching departments:", err);
       toast({
         title: "Error",
         description: "Failed to load departments",
@@ -89,10 +110,14 @@ export default function DepartmentManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, [fetchDepartments]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this department?")) {
+    if (!confirm("Are you sure you want to delete this department? This cannot be undone.")) {
       return;
     }
 
@@ -116,7 +141,8 @@ export default function DepartmentManagement() {
           variant: "destructive",
         });
       }
-    } catch (error) {
+    } catch (err) {
+      console.error("Error deleting department:", err);
       toast({
         title: "Error",
         description: "Failed to delete department",
@@ -125,10 +151,16 @@ export default function DepartmentManagement() {
     }
   };
 
-  const filteredDepartments = departments.filter((dept) =>
-    dept.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    dept.head.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredDepartments = departments.filter((dept) => {
+    const headName = typeof dept.head === 'string' 
+      ? dept.head 
+      : dept.head?.name || '';
+      
+    return (
+      dept.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      headName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   return (
     <div className="space-y-6">
@@ -150,13 +182,15 @@ export default function DepartmentManagement() {
               </p>
             </div>
           </div>
-          <Button 
-            onClick={() => setIsAddModalOpen(true)} 
-            className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-md"
-          >
-            <Plus className="h-4 w-4" />
-            Add Department
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleAddNew}
+              className="gap-2 bg-blue-600 hover:bg-blue-700 shadow-md"
+            >
+              <Plus className="h-4 w-4" />
+              Add Department
+            </Button>
+          </div>
         </div>
       </motion.div>
 
@@ -181,7 +215,7 @@ export default function DepartmentManagement() {
             <div>
               <p className="text-sm text-gray-600">Total Staff</p>
               <p className="text-2xl font-bold text-gray-800">
-                {departments.reduce((acc, dept) => acc + dept.staffCount, 0)}
+                {departments.reduce((sum, dept) => sum + (dept.staffCount || 0), 0)}
               </p>
             </div>
             <Users className="h-8 w-8 text-green-500" />
@@ -190,10 +224,10 @@ export default function DepartmentManagement() {
         <Card className="p-4 bg-white border-l-4 border-l-purple-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Avg Staff/Dept</p>
+              <p className="text-sm text-gray-600">Average Staff/Dept</p>
               <p className="text-2xl font-bold text-gray-800">
                 {departments.length > 0 
-                  ? Math.round(departments.reduce((acc, dept) => acc + dept.staffCount, 0) / departments.length)
+                  ? Math.round(departments.reduce((sum, dept) => sum + (dept.staffCount || 0), 0) / departments.length * 10) / 10 
                   : 0}
               </p>
             </div>
@@ -202,110 +236,103 @@ export default function DepartmentManagement() {
         </Card>
       </motion.div>
 
-      {/* Search */}
-      <motion.div 
-        className="relative"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+      {/* Search and Filter */}
+      <motion.div
+        className="bg-white p-4 rounded-lg shadow-sm border"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-        <Input
-          placeholder="Search departments by name or head..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 h-12 text-base border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-        />
+        <div className="relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search departments..."
+            className="pl-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </motion.div>
 
-      {/* Departments Grid */}
-      <motion.div 
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
+      {/* Departments List */}
+      <motion.div
+        className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
       >
-        {filteredDepartments.map((dept) => (
-          <motion.div
-            key={dept.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            whileHover={{ y: -5, transition: { duration: 0.2 } }}
-          >
-            <Card className="p-6 hover:shadow-xl transition-all duration-300 border-t-4 relative overflow-hidden group">
-              {/* Color accent */}
-              <div className={`absolute top-0 left-0 right-0 h-1 ${dept.color}`} />
-              
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start gap-3 flex-1">
-                  <div className={`${dept.color} p-2.5 rounded-lg`}>
-                    <Building2 className="h-5 w-5 text-white" />
+        {loading ? (
+          <div className="col-span-3 flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        ) : filteredDepartments.length > 0 ? (
+          filteredDepartments.map((dept) => (
+            <Card key={dept.id} className="overflow-hidden">
+              <div className={`h-2 ${dept.color || 'bg-gray-500'}`}></div>
+              <div className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-semibold text-lg">{dept.name}</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {typeof dept.head === 'string' 
+                        ? dept.head 
+                        : dept.head?.name || 'No head assigned'}
+                    </p>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-1">{dept.name}</h3>
-                    <p className="text-sm text-gray-600 leading-relaxed">{dept.description}</p>
-                  </div>
-                </div>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-blue-50">
-                    <Edit className="h-4 w-4 text-blue-600" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 w-8 p-0 hover:bg-red-50"
-                    onClick={() => handleDelete(dept.id)}
-                  >
-                    <Trash2 className="h-4 w-4 text-red-600" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="space-y-3 pt-4 border-t border-gray-100">
-                <div className="flex items-center gap-2">
-                  <div className="bg-gray-100 p-1.5 rounded">
-                    <Users className="h-4 w-4 text-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-500">Department Head</p>
-                    <p className="text-sm font-medium text-gray-800">{dept.head}</p>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => handleEdit(dept)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+                      onClick={() => handleDelete(dept.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="bg-gray-100 p-1.5 rounded">
-                    <Users className="h-4 w-4 text-gray-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-gray-500">Staff Members</p>
-                    <p className="text-sm font-medium text-gray-800">{dept.staffCount} members</p>
-                  </div>
+                <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                  {dept.description}
+                </p>
+                <div className="mt-4 flex justify-between items-center text-sm">
+                  <span className="flex items-center text-gray-600">
+                    <Users className="h-4 w-4 mr-1" />
+                    {dept.staffCount} {dept.staffCount === 1 ? 'member' : 'members'}
+                  </span>
+                  <span className="text-blue-600 hover:text-blue-800 cursor-pointer text-sm font-medium">
+                    View all
+                  </span>
                 </div>
               </div>
             </Card>
-          </motion.div>
-        ))}
+          ))
+        ) : (
+          <div className="col-span-3 text-center py-8 text-gray-500">
+            No departments found. Try adjusting your search or add a new department.
+          </div>
+        )}
       </motion.div>
 
-      {filteredDepartments.length === 0 && (
-        <motion.div 
-          className="text-center py-16"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <Building2 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">No departments found matching your search.</p>
-          <p className="text-gray-400 text-sm mt-2">Try adjusting your search terms</p>
-        </motion.div>
-      )}
-
-      <AddDepartmentModal 
-        isOpen={isAddModalOpen} 
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={() => {
-          setIsAddModalOpen(false);
-          fetchDepartments();
+      {/* Add/Edit Department Modal */}
+      <AddDepartmentModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setCurrentDepartment(null);
         }}
+        onSuccess={() => {
+          fetchDepartments();
+          setIsModalOpen(false);
+        }}
+        initialData={currentDepartment}
       />
     </div>
   );

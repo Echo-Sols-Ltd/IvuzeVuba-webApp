@@ -303,8 +303,10 @@ export default function DoctorSettingsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600">Manage your account and professional preferences</p>
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+          Settings
+        </h1>
+        <p className="text-gray-600 text-lg mt-2">Manage your account and professional preferences</p>
       </motion.div>
 
       <motion.div
@@ -313,106 +315,99 @@ export default function DoctorSettingsPage() {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="profile" className="gap-2">
+        <TabsList className="bg-white/80 backdrop-blur-sm border border-white/60 shadow-lg">
+          <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-[#118CDB] data-[state=active]:text-white">
             <User className="h-4 w-4" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
+          <TabsTrigger value="security" className="gap-2 data-[state=active]:bg-[#118CDB] data-[state=active]:text-white">
             <Lock className="h-4 w-4" />
             Security
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
-          <Card className="p-6">
-            <div className="flex items-center gap-6 mb-6">
-              <Avatar className="h-24 w-24">
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+            <div className="flex items-center gap-6 mb-8">
+              <Avatar className="h-24 w-24 ring-4 ring-blue-100">
                 <AvatarImage src="/man.png" />
-                <AvatarFallback className="text-2xl">
+                <AvatarFallback className="text-2xl bg-[#118CDB] text-white">
                   {profile.firstName?.[0]}{profile.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <Button variant="outline" size="sm" disabled>Change Photo</Button>
-                <p className="text-sm text-gray-500 mt-2">JPG, PNG. Max 2MB</p>
+                <Button variant="outline" size="sm" disabled className="mb-2">Change Photo</Button>
+                <p className="text-sm text-gray-500">JPG, PNG. Max 2MB</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName" className="text-sm font-semibold text-gray-700">First Name</Label>
                 <Input 
                   id="firstName" 
                   value={profile.firstName} 
                   onChange={(e) => setProfile({...profile, firstName: e.target.value})} 
                   disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50" : ""}
+                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-green-500 focus:ring-green-500`}
                 />
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName" className="text-sm font-semibold text-gray-700">Last Name</Label>
                 <Input 
                   id="lastName" 
                   value={profile.lastName} 
                   onChange={(e) => setProfile({...profile, lastName: e.target.value})} 
                   disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50" : ""}
+                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-green-500 focus:ring-green-500`}
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email</Label>
                 <Input 
                   id="email" 
                   type="email" 
                   value={profile.email} 
                   disabled
-                  className="bg-gray-50"
+                  className="mt-1 bg-gray-50/80 border-gray-200"
                 />
               </div>
               <div>
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">Phone</Label>
                 <Input 
                   id="phone" 
                   value={profile.phoneNumber} 
                   onChange={(e) => setProfile({...profile, phoneNumber: e.target.value})} 
                   disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50" : ""}
+                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-green-500 focus:ring-green-500`}
                 />
               </div>
               <div>
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role" className="text-sm font-semibold text-gray-700">Role</Label>
                 <Input 
                   id="role" 
                   value={profile.role} 
                   disabled
-                  className="bg-gray-50"
+                  className="mt-1 bg-gray-50/80 border-gray-200"
                 />
               </div>
-              <div>
-                <Label htmlFor="address">Address</Label>
+              <div className="md:col-span-2">
+                <Label htmlFor="address" className="text-sm font-semibold text-gray-700">Address</Label>
                 <Input 
                   id="address" 
                   value={profile.address} 
                   onChange={(e) => setProfile({...profile, address: e.target.value})} 
                   disabled={!isEditing}
-                  className={!isEditing ? "bg-gray-50" : ""}
-                />
-              </div>
-              <div>
-                <Label htmlFor="userId">User ID</Label>
-                <Input 
-                  id="userId" 
-                  value={profile.id ? profile.id.substring(0, 8) + "..." : ""} 
-                  disabled
-                  className="bg-gray-50"
+                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-green-500 focus:ring-green-500`}
                 />
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex justify-end gap-3 mt-8">
               {!isEditing ? (
-                <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+                <Button onClick={() => setIsEditing(true)} className="bg-green-600 hover:bg-green-700">
+                  Edit Profile
+                </Button>
               ) : (
                 <>
                   <Button 
@@ -424,7 +419,7 @@ export default function DoctorSettingsPage() {
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handleSaveProfile} disabled={saving}>
+                  <Button onClick={handleSaveProfile} disabled={saving} className="bg-green-600 hover:bg-green-700">
                     {saving ? "Saving..." : "Save Changes"}
                   </Button>
                 </>
@@ -434,45 +429,48 @@ export default function DoctorSettingsPage() {
         </TabsContent>
 
         <TabsContent value="security">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Change Password</h3>
             <div className="space-y-4 max-w-md">
               <div>
-                <Label htmlFor="currentPassword">Current Password</Label>
+                <Label htmlFor="currentPassword" className="text-sm font-semibold text-gray-700">Current Password</Label>
                 <Input 
                   id="currentPassword" 
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                  className="mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
                 />
               </div>
               <div>
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword" className="text-sm font-semibold text-gray-700">New Password</Label>
                 <Input 
                   id="newPassword" 
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                  className="mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
                 />
                 <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters long</p>
               </div>
               <div>
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-semibold text-gray-700">Confirm New Password</Label>
                 <Input 
                   id="confirmPassword" 
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                  className="mt-1 border-gray-200 focus:border-green-500 focus:ring-green-500"
                 />
               </div>
-              <Button onClick={handleChangePassword} disabled={changingPassword}>
+              <Button onClick={handleChangePassword} disabled={changingPassword} className="bg-green-600 hover:bg-green-700">
                 {changingPassword ? "Updating..." : "Update Password"}
               </Button>
             </div>
 
-            <div className="mt-8 pt-6 border-t">
-              <h3 className="text-lg font-semibold mb-4">Two-Factor Authentication</h3>
-              <p className="text-sm text-gray-600 mb-4">
+            <div className="mt-8 pt-8 border-t border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Two-Factor Authentication</h3>
+              <p className="text-sm text-gray-600 mb-6">
                 Add an extra layer of security to your account
               </p>
               
@@ -481,25 +479,27 @@ export default function DoctorSettingsPage() {
                   <Button 
                     variant={twoFactorEnabled ? "destructive" : "default"}
                     onClick={handleToggle2FA}
+                    className={!twoFactorEnabled ? "bg-green-600 hover:bg-green-700" : ""}
                   >
                     {twoFactorEnabled ? "Disable 2FA" : "Enable 2FA"}
                   </Button>
                   {twoFactorEnabled && (
-                    <span className="text-sm text-green-600 font-medium">
-                      ✓ 2FA is enabled
+                    <span className="text-sm text-green-600 font-medium flex items-center gap-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      2FA is enabled
                     </span>
                   )}
                 </div>
 
                 {showSecret && twoFactorSecret && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md">
-                    <p className="text-sm font-semibold text-blue-900 mb-2">
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-6 max-w-md">
+                    <p className="text-sm font-semibold text-green-900 mb-3">
                       Your 2FA Secret Code:
                     </p>
-                    <div className="bg-white p-3 rounded border border-blue-300 font-mono text-lg text-center mb-2">
+                    <div className="bg-white p-4 rounded-lg border border-green-300 font-mono text-lg text-center mb-3">
                       {twoFactorSecret}
                     </div>
-                    <p className="text-xs text-blue-700">
+                    <p className="text-xs text-green-700">
                       Save this code securely. You'll need it to verify your identity.
                     </p>
                   </div>
@@ -507,7 +507,7 @@ export default function DoctorSettingsPage() {
 
                 {twoFactorEnabled && (
                   <div className="max-w-md">
-                    <Label htmlFor="verificationCode">Test Verification Code</Label>
+                    <Label htmlFor="verificationCode" className="text-sm font-semibold text-gray-700">Test Verification Code</Label>
                     <div className="flex gap-2 mt-1">
                       <Input 
                         id="verificationCode"
@@ -515,6 +515,7 @@ export default function DoctorSettingsPage() {
                         value={verificationCode}
                         onChange={(e) => setVerificationCode(e.target.value)}
                         maxLength={6}
+                        className="border-gray-200 focus:border-green-500 focus:ring-green-500"
                       />
                       <Button 
                         onClick={handleVerify2FA}

@@ -6,21 +6,23 @@ import Navbar from "@/components/doctor/Navbar";
 import PatientSidebar from "@/components/patient/PatientSidebar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Calendar as CalendarIcon,
-  HelpCircle,
   Clipboard,
   FileText,
   Clock,
   AlertTriangle,
+  Heart,
+  Brain,
+  Eye,
+  Bone,
+  Baby,
+  Stethoscope,
+  Zap,
+  Microscope,
+  CheckCircle,
+  ArrowRight,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -32,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 import { createAppointment, getDepartments } from "@/lib/patientApi";
 import { useToast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 export default function CreateVisitPage() {
   const router = useRouter();
@@ -45,7 +48,7 @@ export default function CreateVisitPage() {
   const [date, setDate] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableDepartments, setAvailableDepartments] = useState<any[]>([]);
-  const [loadingDepartments, setLoadingDepartments] = useState(true);
+  const [selectedDepartment, setSelectedDepartment] = useState<string>("");
 
   useEffect(() => {
     const checkMobile = () => {
@@ -64,9 +67,6 @@ export default function CreateVisitPage() {
         setAvailableDepartments(depts);
       } catch (error) {
         console.error('Error fetching departments:', error);
-        // Use fallback departments if API fails
-      } finally {
-        setLoadingDepartments(false);
       }
     };
 
@@ -80,10 +80,14 @@ export default function CreateVisitPage() {
     }));
   };
 
+  const handleDepartmentSelect = (deptId: string) => {
+    setSelectedDepartment(deptId);
+    handleInputChange("department", deptId);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
+
     if (!formData.department) {
       toast({
         title: "Error",
@@ -114,18 +118,13 @@ export default function CreateVisitPage() {
     setIsSubmitting(true);
 
     try {
-      // Find department name from ID
       const selectedDept = departments.find(d => d.id === formData.department);
       const departmentName = selectedDept?.name || formData.department;
-
-      // Format date as YYYY-MM-DD
       const formattedDate = format(date, 'yyyy-MM-dd');
-
-      // Sanitize reason - replace special characters that backend might reject
       const sanitizedReason = formData.reason
-        .replace(/'/g, "'")  // Replace smart quotes with regular apostrophe
-        .replace(/"/g, '"')  // Replace smart quotes with regular quotes
-        .replace(/[^\w\s.,!?-]/g, ''); // Remove other special characters except basic punctuation
+        .replace(/'/g, "'")
+        .replace(/"/g, '"')
+        .replace(/[^\w\s.,!?-]/g, '');
 
       await createAppointment({
         departmentName: departmentName,
@@ -138,16 +137,14 @@ export default function CreateVisitPage() {
         description: "Your appointment has been created successfully!",
       });
 
-      // Redirect to visits page after success
       setTimeout(() => {
         router.push('/patient/visits');
       }, 1500);
     } catch (error: any) {
       console.error('Error creating appointment:', error);
-      
-      // Parse backend validation errors
+
       let errorMessage = "Failed to create appointment. Please try again.";
-      
+
       if (error.message) {
         try {
           const errorData = JSON.parse(error.message);
@@ -161,7 +158,7 @@ export default function CreateVisitPage() {
           errorMessage = error.message;
         }
       }
-      
+
       toast({
         title: "Error",
         description: errorMessage,
@@ -172,158 +169,211 @@ export default function CreateVisitPage() {
     }
   };
 
-  // Use API departments if available, otherwise fallback to hardcoded
-  const departments = availableDepartments.length > 0 
+  const getDepartmentIcon = (deptName: string) => {
+    const name = deptName.toLowerCase();
+    if (name.includes('cardiology') || name.includes('heart')) return Heart;
+    if (name.includes('neurology') || name.includes('brain')) return Brain;
+    if (name.includes('ophthalmology') || name.includes('eye')) return Eye;
+    if (name.includes('orthopedics') || name.includes('bone')) return Bone;
+    if (name.includes('pediatrics') || name.includes('child')) return Baby;
+    if (name.includes('psychiatry') || name.includes('mental')) return Zap;
+    if (name.includes('dermatology') || name.includes('skin')) return Microscope;
+    return Stethoscope;
+  };
+
+  const departments = availableDepartments.length > 0
     ? availableDepartments.map((dept: any) => ({
-        id: dept.id || dept.name,
-        name: dept.name,
-        description: dept.description || "Healthcare services",
-      }))
+      id: dept.id || dept.name,
+      name: dept.name,
+      description: dept.description || "Healthcare services",
+      color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+      textColor: "text-blue-700",
+    }))
     : [
-        {
-          id: "general",
-          name: "General Medicine",
-          description: "General health consultations and check-ups",
-        },
-        {
-          id: "cardiology",
-          name: "Cardiology",
-          description: "Heart and cardiovascular health",
-        },
-        {
-          id: "dermatology",
-          name: "Dermatology",
-          description: "Skin conditions and treatments",
-        },
-        {
-          id: "orthopedics",
-          name: "Orthopedics",
-          description: "Bone and joint health",
-        },
-        {
-          id: "pediatrics",
-          name: "Pediatrics",
-          description: "Child healthcare services",
-        },
-        {
-          id: "neurology",
-          name: "Neurology",
-          description: "Nervous system disorders",
-        },
-        {
-          id: "psychiatry",
-          name: "Psychiatry",
-          description: "Mental health services",
-        },
-        {
-          id: "ophthalmology",
-          name: "Ophthalmology",
-          description: "Eye care and vision services",
-        },
-      ];
+      {
+        id: "general",
+        name: "General Medicine",
+        description: "General health consultations and check-ups",
+        color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+        textColor: "text-blue-700",
+      },
+      {
+        id: "cardiology",
+        name: "Cardiology",
+        description: "Heart and cardiovascular health",
+        color: "bg-red-50 border-red-200 hover:bg-red-100",
+        textColor: "text-red-700",
+      },
+      {
+        id: "dermatology",
+        name: "Dermatology",
+        description: "Skin conditions and treatments",
+        color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
+        textColor: "text-orange-700",
+      },
+      {
+        id: "orthopedics",
+        name: "Orthopedics",
+        description: "Bone and joint health",
+        color: "bg-green-50 border-green-200 hover:bg-green-100",
+        textColor: "text-green-700",
+      },
+      {
+        id: "pediatrics",
+        name: "Pediatrics",
+        description: "Child healthcare services",
+        color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
+        textColor: "text-pink-700",
+      },
+      {
+        id: "neurology",
+        name: "Neurology",
+        description: "Nervous system disorders",
+        color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
+        textColor: "text-purple-700",
+      },
+      {
+        id: "psychiatry",
+        name: "Psychiatry",
+        description: "Mental health services",
+        color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
+        textColor: "text-indigo-700",
+      },
+      {
+        id: "ophthalmology",
+        name: "Ophthalmology",
+        description: "Eye care and vision services",
+        color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
+        textColor: "text-teal-700",
+      },
+    ];
 
   const experienceTips = [
     {
       icon: Clipboard,
-      text: "Prepare a list of questions for your doctor.",
+      text: "Prepare a list of questions for your doctor",
+      color: "text-blue-600",
     },
     {
       icon: FileText,
-      text: "Bring any relevant medical records or test results.",
+      text: "Bring any relevant medical records or test results",
+      color: "text-green-600",
     },
     {
       icon: Clock,
-      text: "Arrive 15 minutes early for your appointment.",
+      text: "Arrive 15 minutes early for your appointment",
+      color: "text-orange-600",
     },
     {
       icon: AlertTriangle,
-      text: "Inform the staff about any allergies or current medications.",
+      text: "Inform staff about allergies or current medications",
+      color: "text-red-600",
     },
   ];
 
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50">
         <Navbar />
         <PatientSidebar isCollapsed={false} />
-        <div className="pt-20 px-4 space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Create A visit</h1>
-            <p className="text-gray-600 mt-2">Book An appointment Today</p>
-          </div>
+        <div className="pt-16 px-4 pb-4">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-6"
+          >
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              Book Appointment
+            </h1>
+            <p className="text-gray-600 text-sm mt-1">Schedule your visit with our healthcare professionals</p>
+          </motion.div>
 
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm border p-4">
+          <div className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-4"
+            >
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                Choose Department
+              </h2>
+              <div className="grid grid-cols-1 gap-3">
+                {departments.map((dept, index) => {
+                  const Icon = getDepartmentIcon(dept.name);
+                  const isSelected = selectedDepartment === dept.id;
+                  return (
+                    <motion.button
+                      key={dept.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      onClick={() => handleDepartmentSelect(dept.id)}
+                      className={`p-3 rounded-lg border-2 transition-all duration-200 text-left ${isSelected
+                        ? "border-blue-500 bg-blue-50 shadow-md"
+                        : `${dept.color} border-transparent hover:shadow-md`
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${isSelected ? "bg-blue-500" : "bg-white"}`}>
+                          <Icon className={`h-4 w-4 ${isSelected ? "text-white" : dept.textColor}`} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className={`font-medium text-sm ${isSelected ? "text-blue-900" : "text-gray-900"}`}>
+                            {dept.name}
+                          </h3>
+                          <p className={`text-xs mt-1 ${isSelected ? "text-blue-700" : "text-gray-600"}`}>
+                            {dept.description}
+                          </p>
+                        </div>
+                        {isSelected && <CheckCircle className="h-5 w-5 text-blue-500" />}
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-4"
+            >
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
                 Visit Details
               </h2>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="department"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Select Department
-                  </Label>
-                  <Select
-                    value={formData.department}
-                    onValueChange={(value) =>
-                      handleInputChange("department", value)
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select Department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map((dept) => (
-                        <SelectItem key={dept.id} value={dept.id}>
-                          {dept.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="reason"
-                    className="text-sm font-medium text-gray-700"
-                  >
+                  <Label htmlFor="reason" className="text-sm font-semibold text-gray-700">
                     Reason for visit
                   </Label>
                   <Textarea
                     id="reason"
-                    placeholder="Please describe any symptoms, concerns or reasons for visit..."
+                    placeholder="Describe your symptoms, concerns, or reason for the visit..."
                     value={formData.reason}
-                    onChange={(e) =>
-                      handleInputChange("reason", e.target.value)
-                    }
-                    className="min-h-[100px] resize-none"
+                    onChange={(e) => handleInputChange("reason", e.target.value)}
+                    className="min-h-[80px] resize-none border-gray-200 focus:border-blue-500 focus:ring-blue-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Use simple text. Avoid special characters.
-                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="preferredDate"
-                    className="text-sm font-medium text-gray-700"
-                  >
+                  <Label htmlFor="preferredDate" className="text-sm font-semibold text-gray-700">
                     Preferred Date
                   </Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
-                        variant={"outline"}
+                        variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal",
+                          "w-full justify-start text-left font-normal border-gray-200 hover:border-blue-500",
                           !date && "text-muted-foreground"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
+                        {date ? format(date, "PPP") : <span>Select a date</span>}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0">
@@ -331,7 +381,7 @@ export default function CreateVisitPage() {
                         mode="single"
                         selected={date}
                         onSelect={setDate}
-                        initialFocus
+                        disabled={(date) => date < new Date()}
                       />
                     </PopoverContent>
                   </Popover>
@@ -339,55 +389,44 @@ export default function CreateVisitPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 shadow-lg"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Creating Appointment..." : "Confirm and Join Queue"}
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Creating Appointment...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <span>Book Appointment</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                  )}
                 </Button>
               </form>
-            </div>
+            </motion.div>
 
-            <div className="bg-white rounded-lg shadow-sm border p-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-4"
+            >
               <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                For better experience of this visit ...
+                Preparation Tips
               </h2>
               <div className="space-y-3">
                 {experienceTips.map((tip, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <tip.icon className="h-5 w-5 text-gray-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-gray-700">{tip.text}</p>
-                  </div>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                className="w-full mt-4 border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                <HelpCircle className="h-4 w-4 mr-2" />I have questions
-              </Button>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm border p-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                Available Departments
-              </h2>
-
-              <div className="space-y-3">
-                {departments.map((dept) => (
-                  <div key={dept.id} className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-gray-900 rounded-full mt-2 flex-shrink-0"></div>
-                    <div>
-                      <h3 className="font-medium text-gray-900 text-sm">
-                        {dept.name}
-                      </h3>
-                      <p className="text-xs text-gray-600 mt-1">
-                        {dept.description}
-                      </p>
+                  <div key={index} className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-gray-50">
+                      <tip.icon className={`h-4 w-4 ${tip.color}`} />
                     </div>
+                    <p className="text-sm text-gray-700 flex-1">{tip.text}</p>
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -395,167 +434,180 @@ export default function CreateVisitPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50">
       <Navbar />
-
-      <div className="pt-20 flex">
+      <div className="flex">
         <div className="w-64 flex-shrink-0">
           <PatientSidebar isCollapsed={false} />
         </div>
+        <div className="flex-1 pt-20 p-4 min-h-screen overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-6"
+          >
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              Book Appointment
+            </h1>
+            <p className="text-gray-600 mt-1">Schedule your visit with our healthcare professionals</p>
+          </motion.div>
 
-        <div className="flex-1 p-6">
-          <div className="w-full">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">
-                Create A visit
-              </h1>
-              <p className="text-gray-600 mt-2">Book An appointment Today</p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                    Visit Details
-                  </h2>
-
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="department"
-                        className="text-sm font-medium text-gray-700"
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="lg:col-span-2"
+            >
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Choose Your Department
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {departments.map((dept, index) => {
+                    const Icon = getDepartmentIcon(dept.name);
+                    const isSelected = selectedDepartment === dept.id;
+                    return (
+                      <motion.button
+                        key={dept.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.1 }}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleDepartmentSelect(dept.id)}
+                        className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${isSelected
+                          ? "border-blue-500 bg-blue-50 shadow-lg"
+                          : `${dept.color} border-transparent hover:shadow-md`
+                          }`}
                       >
-                        Select Department
-                      </Label>
-                      <Select
-                        value={formData.department}
-                        onValueChange={(value) =>
-                          handleInputChange("department", value)
-                        }
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select Department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {departments.map((dept) => (
-                            <SelectItem key={dept.id} value={dept.id}>
+                        <div className="flex items-start gap-4">
+                          <div className={`p-3 rounded-lg ${isSelected ? "bg-blue-500" : "bg-white shadow-sm"}`}>
+                            <Icon className={`h-6 w-6 ${isSelected ? "text-white" : dept.textColor}`} />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className={`font-semibold ${isSelected ? "text-blue-900" : "text-gray-900"}`}>
                               {dept.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="reason"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Reason for visit
-                      </Label>
-                      <Textarea
-                        id="reason"
-                        placeholder="Please describe any symptoms, concerns or reasons for visit..."
-                        value={formData.reason}
-                        onChange={(e) =>
-                          handleInputChange("reason", e.target.value)
-                        }
-                        className="min-h-[120px] resize-none"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Use simple text. Avoid special characters.
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="preferredDate"
-                        className="text-sm font-medium text-gray-700"
-                      >
-                        Preferred Date
-                      </Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !date && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? (
-                              format(date, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={date}
-                            onSelect={setDate}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
-                    >
-                      Confirm and Join Queue
-                    </Button>
-                  </form>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                    For better experience of this visit ...
-                  </h2>
-                  <div className="space-y-4">
-                    {experienceTips.map((tip, index) => (
-                      <div key={index} className="flex items-start space-x-3">
-                        <tip.icon className="h-5 w-5 text-gray-600 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-gray-700">{tip.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="w-full mt-6 border-gray-300 text-gray-700 hover:bg-gray-50"
-                  >
-                    <HelpCircle className="h-4 w-4 mr-2" />I have questions
-                  </Button>
-                </div>
-              </div>
-
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-24">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                    Available Departments
-                  </h2>
-
-                  <div className="space-y-4">
-                    {departments.map((dept) => (
-                      <div key={dept.id} className="flex items-start space-x-3">
-                        <div className="w-2 h-2 bg-gray-900 rounded-full mt-2 flex-shrink-0"></div>
-                        <div>
-                          <h3 className="font-medium text-gray-900 text-sm">
-                            {dept.name}
-                          </h3>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {dept.description}
-                          </p>
+                            </h3>
+                            <p className={`text-sm mt-1 ${isSelected ? "text-blue-700" : "text-gray-600"}`}>
+                              {dept.description}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <CheckCircle className="h-6 w-6 text-blue-500 flex-shrink-0" />
+                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
-            </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="mt-6 bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg hover:shadow-xl transition-all duration-300 p-6"
+              >
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Appointment Details
+                </h2>
+
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="reason" className="text-sm font-semibold text-gray-700">
+                      Reason for visit
+                    </Label>
+                    <Textarea
+                      id="reason"
+                      placeholder="Please describe your symptoms, concerns, or reason for the visit in detail..."
+                      value={formData.reason}
+                      onChange={(e) => handleInputChange("reason", e.target.value)}
+                      className="min-h-[100px] resize-none border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Provide as much detail as possible to help our medical team prepare for your visit.
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="preferredDate" className="text-sm font-semibold text-gray-700">
+                      Preferred Date
+                    </Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal border-gray-200 hover:border-blue-500",
+                            !date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {date ? format(date, "PPP") : <span>Select your preferred date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0">
+                        <Calendar
+                          mode="single"
+                          selected={date}
+                          onSelect={setDate}
+                          disabled={(date) => date < new Date()}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 shadow-lg hover:shadow-xl transition-all duration-300"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        Creating Appointment...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span>Book Appointment</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    )}
+                  </Button>
+                </form>
+              </motion.div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="space-y-6"
+            >
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg hover:shadow-xl transition-all duration-300 p-6 sticky top-24">
+                <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                  Preparation Tips
+                </h2>
+                <div className="space-y-4">
+                  {experienceTips.map((tip, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.4 + index * 0.1 }}
+                      className="flex items-start gap-3"
+                    >
+                      <div className="p-2 rounded-lg bg-gray-50">
+                        <tip.icon className={`h-5 w-5 ${tip.color}`} />
+                      </div>
+                      <p className="text-sm text-gray-700 flex-1">{tip.text}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>

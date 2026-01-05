@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,31 @@ export default function AssignDoctorModal({ appointmentId, patientName, onRefres
   const [selectedDoctorId, setSelectedDoctorId] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  
+  // Function to send notification
+  const sendNotification = async (patientId: string, doctorName: string) => {
+    try {
+      const headers = getAuthHeaders();
+      headers['Content-Type'] = 'application/json';
+      
+      const response = await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          userId: patientId,
+          type: 'info',
+          title: 'Doctor Assigned',
+          message: `Dr. ${doctorName} has been assigned to your appointment`,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to send notification');
+      }
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -79,6 +104,9 @@ export default function AssignDoctorModal({ appointmentId, patientName, onRefres
 
     setLoading(true);
     try {
+      // First get the doctor's name for the notification
+      const selectedDoctor = doctors.find(doc => doc.id === selectedDoctorId);
+      
       const response = await fetch(API_ENDPOINTS.QUEUE.ASSIGN_DOCTOR, {
         method: "POST",
         headers: getAuthHeaders(),
@@ -89,6 +117,22 @@ export default function AssignDoctorModal({ appointmentId, patientName, onRefres
       });
 
       if (response.ok) {
+        // Get the patient ID from the appointment
+        const appointmentResponse = await fetch(`${API_ENDPOINTS.PATIENT.APPOINTMENTS}/${appointmentId}`, {
+          headers: getAuthHeaders(),
+        });
+        
+        if (appointmentResponse.ok) {
+          const appointment = await appointmentResponse.json();
+          // Send notification to the patient
+          if (appointment.patientId && selectedDoctor) {
+            await sendNotification(
+              appointment.patientId,
+              `${selectedDoctor.firstName} ${selectedDoctor.lastName}`
+            );
+          }
+        }
+
         toast({
           title: "Success",
           description: "Doctor assigned successfully",
