@@ -43,8 +43,8 @@ export const RecentVisitsCard = ({ visits }: RecentVisitsCardProps) => (
           </Link>
         </div>
       ) : (
-        visits.map((visit) => (
-          <div key={visit.id} className="p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100 hover:shadow-md">
+        visits.map((visit, index) => (
+          <div key={visit.id || `visit-${index}`} className="p-4 bg-gray-50 rounded-lg transition-all duration-300 hover:bg-gray-100 hover:shadow-md">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex-1">
                 <p className="font-medium text-gray-900">{visit.hospital}</p>

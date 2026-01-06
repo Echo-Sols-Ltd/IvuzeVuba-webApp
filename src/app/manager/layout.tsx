@@ -10,11 +10,12 @@ import { ToastProvider } from "@/hooks/use-toast";
 const ManagerLayout = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
-  // Exclude auth pages from dashboard layout
+  // Exclude auth pages and registration page from dashboard layout
   const isAuthPage = pathname?.startsWith("/manager/auth");
+  const isRegisterPage = pathname === "/manager/register";
 
-  if (isAuthPage) {
-    // Auth pages without layout
+  if (isAuthPage || isRegisterPage) {
+    // Auth and registration pages without layout
     return <>{children}</>;
   }
 

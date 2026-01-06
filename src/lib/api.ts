@@ -73,6 +73,9 @@ export const API_ENDPOINTS = {
         QUEUE_STATS: `${API_BASE_URL}/api/manager/queue-stats`,
         PHARMACY_STATS: `${API_BASE_URL}/api/manager/pharmacy-stats`,
         NOTIFICATIONS: `${API_BASE_URL}/api/manager/notifications`,
+        REGISTER: `${API_BASE_URL}/manager/api/healthlink/v1/register`,
+        CHECK_EMAIL: (email: string) => `${API_BASE_URL}/manager/api/healthlink/v1/check-email/${email}`,
+        REGISTRATION_REQUIREMENTS: `${API_BASE_URL}/manager/api/healthlink/v1/requirements`,
     },
     STAFF: {
         LIST: `${API_BASE_URL}/api/staff`,
