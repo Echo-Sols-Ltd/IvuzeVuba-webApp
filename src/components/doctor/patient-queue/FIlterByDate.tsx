@@ -17,13 +17,13 @@ export function FilterByDate({ onChange }: { onChange?: (date: Date | undefined)
           <Button
             variant="outline"
             id="date"
-            className="w-48 justify-between font-normal"
+            className="w-48 justify-between font-normal hover:bg-blue-50 hover:border-blue-200 transition-colors"
           >
             {date ? date.toLocaleDateString() : "Filter by date"}
-            <ChevronDownIcon />
+            <ChevronDownIcon className="h-4 w-4 text-gray-500" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+        <PopoverContent className="w-auto overflow-hidden p-0 shadow-xl border-0" align="start">
           <Calendar
             mode="single"
             selected={date}
@@ -33,6 +33,7 @@ export function FilterByDate({ onChange }: { onChange?: (date: Date | undefined)
               setOpen(false);
               onChange?.(d);
             }}
+            className="rounded-xl"
           />
         </PopoverContent>
       </Popover>

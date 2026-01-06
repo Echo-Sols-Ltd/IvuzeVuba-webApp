@@ -17,6 +17,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -94,26 +95,32 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
 
       <div
         className={`bg-gradient-to-b from-white to-gray-50/50 border-r border-gray-200/60 flex flex-col justify-between z-50 transform transition-all duration-300 backdrop-blur-sm
-        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 ${
-          isCollapsed ? "w-16" : "w-64"
-        } ${
-          open
+        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 ${isCollapsed ? "w-16" : "w-64"
+          } ${open
             ? "fixed inset-y-0 left-0 h-screen shadow-2xl"
             : "fixed left-0 top-0 bottom-0 hidden md:flex h-screen"
-        }`}
+          }`}
       >
-        <div className="pt-16">
+        <div className="">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
             {!isCollapsed && (
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-[#118CDB] rounded-lg flex items-center justify-center">
-                  <LayoutDashboard className="h-4 w-4 text-white" />
+                <Image src="/logo.svg" alt="HealthLink Logo" width={32} height={32} />
+                <div>
+                  <h1 className="font-semibold text-black">HealthLink</h1>
+                  <p className="text-[#6B6B6B] text-xs">
+                    Your health care assistant
+                  </p>
                 </div>
-                <h1 className="font-bold text-base text-gray-900">Patient Portal</h1>
               </div>
             )}
-            <button 
-              onClick={() => setOpen(false)} 
+            {isCollapsed && (
+              <div className="flex justify-center w-full">
+                <Image src="/logo.svg" alt="HealthLink Logo" width={32} height={32} />
+              </div>
+            )}
+            <button
+              onClick={() => setOpen(false)}
               className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <X className="h-5 w-5 text-gray-700" />
@@ -133,11 +140,10 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
                   {link.hasDropdown ? (
                     <button
                       onClick={() => setVisitDetailsOpen(!visitDetailsOpen)}
-                      className={`flex items-center gap-3 px-3 py-3 text-sm w-full rounded-xl transition-all duration-200 group ${
-                        isActive
-                          ? "bg-[#118CDB] text-white shadow-lg shadow-blue-500/25"
-                          : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
-                      } ${isCollapsed ? "justify-center" : ""}`}
+                      className={`flex items-center gap-3 px-3 py-3 text-sm w-full rounded-xl transition-all duration-200 group ${isActive
+                        ? "bg-[#118CDB] text-white shadow-lg shadow-blue-500/25"
+                        : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
+                        } ${isCollapsed ? "justify-center" : ""}`}
                     >
                       <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700"}`} />
                       {!isCollapsed && (
@@ -156,11 +162,10 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
                       href={link.href}
                       prefetch={true}
                       onClick={() => setOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-3 text-sm rounded-xl transition-all duration-200 group ${
-                        isActive
-                          ? "bg-[#118CDB] text-white shadow-lg shadow-blue-500/25"
-                          : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
-                      } ${isCollapsed ? "justify-center" : ""}`}
+                      className={`flex items-center gap-3 px-3 py-3 text-sm rounded-xl transition-all duration-200 group ${isActive
+                        ? "bg-[#118CDB] text-white shadow-lg shadow-blue-500/25"
+                        : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
+                        } ${isCollapsed ? "justify-center" : ""}`}
                     >
                       <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? "text-white" : "text-gray-500 group-hover:text-gray-700"}`} />
                       {!isCollapsed && <span className="font-medium">{link.label}</span>}
@@ -169,7 +174,7 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
 
                   <AnimatePresence>
                     {link.hasDropdown && !isCollapsed && visitDetailsOpen && (
-                      <motion.div 
+                      <motion.div
                         className="ml-6 mt-2 space-y-1 overflow-hidden"
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -208,20 +213,18 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
           <Link
             href="/patient/settings"
             onClick={() => setOpen(false)}
-            className={`flex items-center gap-3 text-sm px-3 py-2 rounded-lg transition-all duration-200 group ${
-              pathname === "/patient/settings"
-                ? "bg-gray-100 text-gray-900"
-                : "text-gray-600 hover:bg-gray-100/60 hover:text-gray-900"
-            } ${isCollapsed ? "justify-center" : ""}`}
+            className={`flex items-center gap-3 text-sm px-3 py-2 rounded-lg transition-all duration-200 group ${pathname === "/patient/settings"
+              ? "bg-gray-100 text-gray-900"
+              : "text-gray-600 hover:bg-gray-100/60 hover:text-gray-900"
+              } ${isCollapsed ? "justify-center" : ""}`}
           >
             <Settings className="h-4 w-4 flex-shrink-0 text-gray-500 group-hover:text-gray-700" />
             {!isCollapsed && <span className="font-medium">Settings</span>}
           </Link>
           <button
             onClick={handleLogout}
-            className={`flex items-center gap-3 text-sm px-3 py-2 rounded-lg transition-all duration-200 w-full text-gray-600 hover:bg-red-50 hover:text-red-600 group ${
-              isCollapsed ? "justify-center" : ""
-            }`}
+            className={`flex items-center gap-3 text-sm px-3 py-2 rounded-lg transition-all duration-200 w-full text-gray-600 hover:bg-red-50 hover:text-red-600 group ${isCollapsed ? "justify-center" : ""
+              }`}
           >
             <LogOut className="h-4 w-4 flex-shrink-0 text-gray-500 group-hover:text-red-500" />
             {!isCollapsed && <span className="font-medium">Logout</span>}
@@ -247,9 +250,9 @@ const PatientSidebar = ({ isCollapsed = false }: PatientSidebarProps) => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={cancelLogout} 
+            <Button
+              variant="outline"
+              onClick={cancelLogout}
               className="flex-1"
               disabled={isLoggingOut}
             >

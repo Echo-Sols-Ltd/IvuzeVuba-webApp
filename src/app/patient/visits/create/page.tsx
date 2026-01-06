@@ -371,12 +371,13 @@ export default function CreateVisitPage() {
                         {date ? format(date, "PPP") : <span>Select a date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-96 p-0 shadow-xl border-0" align="start">
                       <Calendar
                         mode="single"
                         selected={date}
                         onSelect={setDate}
                         disabled={(date) => date < new Date()}
+                        className="rounded-xl w-full"
                       />
                     </PopoverContent>
                   </Popover>
@@ -430,8 +431,8 @@ export default function CreateVisitPage() {
       {/* Desktop Layout */}
       <div className="hidden lg:flex">
         <PatientSidebar isCollapsed={false} />
-        <main className="flex-1 pt-16 p-4 xl:p-6 min-h-screen overflow-y-auto">
-          <div className="space-y-6">
+        <main className="flex-1 pt-8 p-4 xl:p-6 min-h-screen overflow-y-auto">
+          <div className="space-y-4">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -538,12 +539,13 @@ export default function CreateVisitPage() {
                           {date ? format(date, "PPP") : <span>Select your preferred date</span>}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-96 p-0 shadow-xl border-0">
                         <Calendar
                           mode="single"
                           selected={date}
                           onSelect={setDate}
                           disabled={(date) => date < new Date()}
+                          className="rounded-xl w-full"
                         />
                       </PopoverContent>
                     </Popover>

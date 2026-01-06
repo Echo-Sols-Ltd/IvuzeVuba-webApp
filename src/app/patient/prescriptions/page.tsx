@@ -298,10 +298,10 @@ const PrescriptionsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex pt-16">
+      <div className="flex pt-8">
         <PatientSidebar />
-        <main className="flex-1 p-6 overflow-y-auto">
-          <div className="space-y-6">
+        <main className="flex-1 p-4 overflow-y-auto">
+          <div className="space-y-4">
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}

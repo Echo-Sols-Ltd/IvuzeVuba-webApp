@@ -335,10 +335,10 @@ export default function ViewVisitsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex pt-16">
+      <div className="flex pt-8">
         <PatientSidebar isCollapsed={false} />
-        <main className="flex-1 p-6 overflow-y-auto">
-          <div className="space-y-6">
+        <main className="flex-1 p-4 overflow-y-auto">
+          <div className="space-y-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Visit Details

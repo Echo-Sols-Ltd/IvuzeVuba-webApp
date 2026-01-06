@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from "react";
 import { Calendar, DollarSign, Users, Activity } from "lucide-react";
-import type { 
-  Appointment, 
-  Prescription, 
-  PatientDashboard, 
-  Wallet 
+import type {
+  Appointment,
+  Prescription,
+  PatientDashboard,
+  Wallet
 } from "@/lib/patientApi";
-import { 
-  getPatientDashboard, 
-  getAppointments, 
-  getPrescriptions, 
-  getWallet 
+import {
+  getPatientDashboard,
+  getAppointments,
+  getPrescriptions,
+  getWallet
 } from "@/lib/patientApi";
 import { useIsMobile } from "@/hooks/useMediaQuery";
 import { usePatientAuth } from "@/hooks/useAuth";
@@ -84,10 +84,10 @@ const DashboardPage = () => {
         // Fetch data separately to handle individual failures
         const dashboardData = await getPatientDashboard().catch(err => {
           console.error('Dashboard fetch error:', err);
-          return { 
-            upcomingAppointments: 0, 
-            activePrescriptions: 0, 
-            recentVisits: 0, 
+          return {
+            upcomingAppointments: 0,
+            activePrescriptions: 0,
+            recentVisits: 0,
             walletBalance: 0,
             totalAppointments: 0,
             completedAppointments: 0,
@@ -127,7 +127,7 @@ const DashboardPage = () => {
           ...dashboardData,
           recentVisits: recentVisitsCount, // Ensure this is always a number
           totalAppointments: dashboardData.totalAppointments || appointmentsData.length || 0,
-          completedAppointments: dashboardData.completedAppointments || 
+          completedAppointments: dashboardData.completedAppointments ||
             appointmentsData.filter(a => a.status === 'completed').length || 0,
           totalPrescriptions: dashboardData.totalPrescriptions || prescriptionsData.length || 0
         }));
@@ -162,21 +162,21 @@ const DashboardPage = () => {
   }, [isAuthenticated]);
 
   // Rest of the component remains the same...
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="flex pt-16">
+      <div className="flex pt-8">
         <PatientSidebar />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 overflow-y-auto">
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <LoadingSpinner />
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <h1 className="text-2xl font-bold text-gray-800">Welcome back, {patientName}!</h1>
-              
+
               {/* Stats Grid */}
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <StatsCard
