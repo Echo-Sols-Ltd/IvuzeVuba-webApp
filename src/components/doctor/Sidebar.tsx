@@ -75,18 +75,22 @@ const Sidebar = () => {
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setOpen(true)}
-        className="md:hidden fixed z-50 p-3 bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+        className="md:hidden fixed top-16 left-4 z-50 p-3 bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
       >
         <Menu className="h-5 w-5 text-gray-700" />
       </button>
 
       {/* Sidebar */}
       <div
-        className={`h-screen w-64 bg-gradient-to-b from-white to-gray-50/50 border-r border-gray-200/60 flex flex-col justify-between z-40 transform transition-all duration-300 backdrop-blur-sm shadow-lg
-        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
+        className={`bg-gradient-to-b from-white to-gray-50/50 border-r border-gray-200/60 flex flex-col z-40 transform transition-all duration-300 backdrop-blur-sm shadow-lg
+        ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 ${
+          open
+            ? "fixed inset-y-0 left-0 w-64 h-screen"
+            : "fixed left-0 top-0 bottom-0 w-64 h-screen hidden md:flex"
+        }`}
       >
         {/* Header */}
-        <div className="pt-16">
+        <div className="pt-16 flex-shrink-0">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200/60">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-[#118CDB] rounded-lg flex items-center justify-center">
@@ -113,6 +117,7 @@ const Sidebar = () => {
                   <Link
                     href={link.href}
                     prefetch={true}
+                    onClick={() => setOpen(false)}
                     className={`flex items-center gap-3 px-3 py-3 text-sm rounded-xl transition-all duration-200 group ${
                       isActive
                         ? "bg-[#118CDB] text-white shadow-lg shadow-blue-500/25"
@@ -128,10 +133,14 @@ const Sidebar = () => {
           </nav>
         </div>
 
-        {/* Footer */}
-        <div className="border-t border-gray-200/60 p-3 space-y-2">
+        {/* Spacer to push footer to bottom */}
+        <div className="flex-1"></div>
+
+        {/* Footer - Always at bottom */}
+        <div className="border-t border-gray-200/60 p-3 space-y-2 flex-shrink-0 bg-white/80">
           <Link
             href="/doctor/settings"
+            onClick={() => setOpen(false)}
             className={`flex items-center gap-3 text-sm px-3 py-2 rounded-lg transition-all duration-200 group ${
               pathname === "/doctor/settings"
                 ? "bg-gray-100 text-gray-900"
@@ -150,6 +159,14 @@ const Sidebar = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Overlay */}
+      {open && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30"
+          onClick={() => setOpen(false)}
+        />
+      )}
 
       {/* Logout Confirmation Dialog */}
       <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>

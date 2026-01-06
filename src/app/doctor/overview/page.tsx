@@ -10,7 +10,7 @@ import CalendarCard from "@/components/doctor/CalendarCard";
 import dynamic from "next/dynamic";
 import { useDoctorAuth } from "@/hooks/useAuth";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { getQueueCount } from "@/lib/doctorApi";
+import { getDashboardStats, OverviewStats } from "@/lib/doctorApi";
 
 // Lazy load Chatbot for better performance
 const Chatbot = dynamic(() => import("@/components/patient/Chatbot").then(mod => ({ default: mod.Chatbot })), {
@@ -20,15 +20,21 @@ const Chatbot = dynamic(() => import("@/components/patient/Chatbot").then(mod =>
 
 const Page = () => {
   const { isAuthenticated, isLoading } = useDoctorAuth();
-  const [queueCount, setQueueCount] = useState<number>(0);
+  const [stats, setStats] = useState<OverviewStats>({
+    waiting: 0,
+    inConsultation: 0,
+    referred: 0,
+    completed: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [doctorName, setDoctorName] = useState<string>("Doctor");
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const count = await getQueueCount();
-        setQueueCount(count);
+        // Fetch dashboard stats
+        const dashboardStats = await getDashboardStats();
+        setStats(dashboardStats);
         
         // Fetch doctor profile for name
         const { API_ENDPOINTS, getAuthHeaders } = await import("@/lib/api");
@@ -58,10 +64,10 @@ const Page = () => {
   }
   
   const data = [
-    { title: "Total in Queue", total: queueCount },
-    { title: "In consultation", total: 0 },
-    { title: "Referred", total: 0 },
-    { title: "Completed", total: 0 },
+    { title: "Total in Queue", total: stats.waiting },
+    { title: "In consultation", total: stats.inConsultation },
+    { title: "Referred", total: stats.referred },
+    { title: "Completed", total: stats.completed },
   ];
 
   return (

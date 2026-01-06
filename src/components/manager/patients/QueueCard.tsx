@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Image from "next/image";
 import AssignDoctorModal from "@/components/modals/AssignDoctorModal";
+import UnassignDoctorModal from "@/components/modals/UnassignDoctorModal";
 import NotifyDoctorModal from "@/components/modals/NotifyDoctorModal";
 
 interface QueueCardProps {
@@ -88,11 +89,20 @@ export default function QueueCard({
 
         {/* Buttons with modals */}
         <div className="flex gap-2">
-          <AssignDoctorModal 
-            appointmentId={appointmentId}
-            patientName={name} 
-            onRefresh={onRefresh}
-          />
+          {assignedDoctorName ? (
+            <UnassignDoctorModal 
+              appointmentId={appointmentId}
+              patientName={name}
+              assignedDoctorName={assignedDoctorName}
+              onRefresh={onRefresh}
+            />
+          ) : (
+            <AssignDoctorModal 
+              appointmentId={appointmentId}
+              patientName={name} 
+              onRefresh={onRefresh}
+            />
+          )}
           <NotifyDoctorModal 
             appointmentId={appointmentId}
             patientName={name}

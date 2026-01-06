@@ -4,6 +4,8 @@ import { useState, useMemo } from "react";
 import QueueCard from "./QueueCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { Pagination } from "@/components/ui/pagination";
+import { usePagination } from "@/hooks/usePagination";
 import { Search } from "lucide-react";
 
 interface Queue {
@@ -51,12 +53,32 @@ export default function QueueList({ queues, onRefresh }: QueueListProps) {
         });
     }, [queues, search, filter]);
 
+    const {
+        currentPage,
+        totalPages,
+        itemsPerPage,
+        currentItems,
+        paginationInfo,
+        goToPage,
+        changeItemsPerPage,
+    } = usePagination(filteredQueues, { itemsPerPage: 10 });
+
+    const handlePageChange = (page: number) => {
+        goToPage(page);
+        // Scroll to top of the list
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleItemsPerPageChange = (value: string) => {
+        changeItemsPerPage(Number(value));
+    };
+
     return (
         <div className="mt-4 space-y-4">
             {/* Filters */}
             <div className="flex justify-between items-center gap-3 mb-4">
                 <div className="text-sm text-gray-600">
-                    Showing {filteredQueues.length} of {queues.length} patients
+                    Showing {paginationInfo.startItem} to {paginationInfo.endItem} of {paginationInfo.totalItems} patients
                 </div>
                 <div className="flex gap-3">
                     <Select value={filter} onValueChange={(val) => setFilter(val as "all" | "assigned" | "unassigned")}>
@@ -81,6 +103,24 @@ export default function QueueList({ queues, onRefresh }: QueueListProps) {
                 </div>
             </div>
 
+            {/* Items per page selector */}
+            {filteredQueues.length > 0 && (
+                <div className="flex items-center justify-end gap-2 mb-4">
+                    <span className="text-sm text-gray-600">Items per page:</span>
+                    <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                        <SelectTrigger className="w-20">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="5">5</SelectItem>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="20">20</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
+
             {/* List */}
             {filteredQueues.length === 0 ? (
                 <div className="text-center py-12 text-gray-500 bg-white rounded-lg border">
@@ -88,21 +128,38 @@ export default function QueueList({ queues, onRefresh }: QueueListProps) {
                     <p className="text-sm mt-1">Try adjusting your search or filter criteria</p>
                 </div>
             ) : (
-                filteredQueues.map((q, index) => (
-                    <QueueCard 
-                        key={q.appointmentId || index}
-                        appointmentId={q.appointmentId}
-                        name={q.patientName}
-                        id={q.patientId}
-                        description={q.reason}
-                        serviceDate={q.preferredDate}
-                        imageUrl={q.patientImageUrl}
-                        departmentName={q.departmentName}
-                        status={q.status}
-                        assignedDoctorName={q.assignedDoctorName}
-                        onRefresh={onRefresh}
-                    />
-                ))
+                <>
+                    <div className="space-y-4">
+                        {currentItems.map((q, index) => (
+                            <QueueCard 
+                                key={q.appointmentId || index}
+                                appointmentId={q.appointmentId}
+                                name={q.patientName}
+                                id={q.patientId}
+                                description={q.reason}
+                                serviceDate={q.preferredDate}
+                                imageUrl={q.patientImageUrl}
+                                departmentName={q.departmentName}
+                                status={q.status}
+                                assignedDoctorName={q.assignedDoctorName}
+                                onRefresh={onRefresh}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="mt-6 border-t pt-4">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                                itemsPerPage={itemsPerPage}
+                                totalItems={paginationInfo.totalItems}
+                            />
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );

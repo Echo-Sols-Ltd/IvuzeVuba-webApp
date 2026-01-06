@@ -5,7 +5,7 @@ import PatientSidebar from "@/components/patient/PatientSidebar";
 import React, { ReactNode, Suspense } from "react";
 import { usePathname } from "next/navigation";
 import LoadingSpinner from "@/components/LoadingSpinner";
-import { ToasterProvider } from "@/components/ui/toaster";
+import { ToastProvider } from "@/hooks/use-toast";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 
 const PatientLayout = ({ children }: { children: ReactNode }) => {
@@ -22,7 +22,7 @@ const PatientLayout = ({ children }: { children: ReactNode }) => {
     // Default Patient layout with Navbar + Sidebar
     return (
         <NotificationProvider>
-            <ToasterProvider>
+            <ToastProvider>
                 <div className="h-screen flex flex-col">
                     <div className="fixed top-0 w-full z-50">
                         <Navbar />
@@ -38,7 +38,7 @@ const PatientLayout = ({ children }: { children: ReactNode }) => {
                         </main>
                     </div>
                 </div>
-            </ToasterProvider>
+            </ToastProvider>
         </NotificationProvider>
     );
 };

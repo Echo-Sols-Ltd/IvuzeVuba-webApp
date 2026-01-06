@@ -53,6 +53,7 @@ export default function ManagerSettingsPage() {
       if (response.ok) {
         const data = await response.json();
         console.log("Profile data received:", data);
+        console.log("Email from API:", data.email);
         setProfile({
           firstName: data.firstName || "",
           lastName: data.lastName === "string" ? "" : (data.lastName || ""),
@@ -223,11 +224,9 @@ export default function ManagerSettingsPage() {
 
         if (response.ok) {
           setTwoFactorEnabled(true);
-          setTwoFactorSecret(data.secret);
-          setShowSecret(true);
           toast({
             title: "Success",
-            description: "Two-factor authentication enabled",
+            description: data.message || "Two-factor authentication enabled. Check your email for the verification code.",
           });
         } else {
           toast({
@@ -241,6 +240,36 @@ export default function ManagerSettingsPage() {
       toast({
         title: "Error",
         description: "Failed to toggle 2FA",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendCode = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH.SEND_2FA_CODE, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: data.message || "2FA code sent to your email",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to send 2FA code",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send 2FA code",
         variant: "destructive",
       });
     }
@@ -314,11 +343,11 @@ export default function ManagerSettingsPage() {
       >
         <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="bg-white/80 backdrop-blur-sm border border-white/60 shadow-lg">
-          <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+          <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-[#118CDB] data-[state=active]:text-white">
             <User className="h-4 w-4" />
             Profile
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2 data-[state=active]:bg-purple-500 data-[state=active]:text-white">
+          <TabsTrigger value="security" className="gap-2 data-[state=active]:bg-[#118CDB] data-[state=active]:text-white">
             <Lock className="h-4 w-4" />
             Security
           </TabsTrigger>
@@ -327,9 +356,9 @@ export default function ManagerSettingsPage() {
         <TabsContent value="profile">
           <Card className="bg-white/80 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-300 p-6">
             <div className="flex items-center gap-6 mb-8">
-              <Avatar className="h-24 w-24 ring-4 ring-purple-100">
+              <Avatar className="h-24 w-24 ring-4 ring-blue-100">
                 <AvatarImage src="/man.png" />
-                <AvatarFallback className="text-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                <AvatarFallback className="text-2xl bg-[#118CDB] text-white">
                   {profile.firstName?.[0]}{profile.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
@@ -347,7 +376,7 @@ export default function ManagerSettingsPage() {
                   value={profile.firstName} 
                   onChange={(e) => setProfile({...profile, firstName: e.target.value})} 
                   disabled={!isEditing}
-                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-purple-500 focus:ring-purple-500`}
+                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
                 />
               </div>
               <div>
@@ -357,18 +386,23 @@ export default function ManagerSettingsPage() {
                   value={profile.lastName} 
                   onChange={(e) => setProfile({...profile, lastName: e.target.value})} 
                   disabled={!isEditing}
-                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-purple-500 focus:ring-purple-500`}
+                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
                 />
               </div>
-              <div>
-                <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email</Label>
+              <div className="relative">
+                <Label htmlFor="email" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  Email Address
+                  <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Read-only</span>
+                </Label>
                 <Input 
                   id="email" 
                   type="email" 
                   value={profile.email} 
                   disabled
-                  className="mt-1 bg-gray-50/80 border-gray-200"
+                  className="mt-1 bg-gray-50/80 border-gray-200 text-gray-700 font-medium"
+                  placeholder="Loading email..."
                 />
+                <p className="text-xs text-gray-500 mt-1">Email cannot be changed after account creation</p>
               </div>
               <div>
                 <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">Phone</Label>
@@ -377,7 +411,7 @@ export default function ManagerSettingsPage() {
                   value={profile.phoneNumber} 
                   onChange={(e) => setProfile({...profile, phoneNumber: e.target.value})} 
                   disabled={!isEditing}
-                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-purple-500 focus:ring-purple-500`}
+                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
                 />
               </div>
               <div>
@@ -396,14 +430,14 @@ export default function ManagerSettingsPage() {
                   value={profile.address} 
                   onChange={(e) => setProfile({...profile, address: e.target.value})} 
                   disabled={!isEditing}
-                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-purple-500 focus:ring-purple-500`}
+                  className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
                 />
               </div>
             </div>
 
             <div className="flex justify-end gap-3 mt-8">
               {!isEditing ? (
-                <Button onClick={() => setIsEditing(true)} className="bg-purple-600 hover:bg-purple-700">
+                <Button onClick={() => setIsEditing(true)} className="bg-[#118CDB] hover:bg-[#0F7BC7]">
                   Edit Profile
                 </Button>
               ) : (
@@ -417,7 +451,7 @@ export default function ManagerSettingsPage() {
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handleSaveProfile} disabled={saving} className="bg-purple-600 hover:bg-purple-700">
+                  <Button onClick={handleSaveProfile} disabled={saving} className="bg-[#118CDB] hover:bg-[#0F7BC7]">
                     {saving ? "Saving..." : "Save Changes"}
                   </Button>
                 </>
@@ -437,7 +471,7 @@ export default function ManagerSettingsPage() {
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
-                  className="mt-1 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                  className="mt-1 border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]"
                 />
               </div>
               <div>
@@ -447,7 +481,7 @@ export default function ManagerSettingsPage() {
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                  className="mt-1 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                  className="mt-1 border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]"
                 />
                 <p className="text-xs text-gray-500 mt-1">Must be at least 8 characters long</p>
               </div>
@@ -458,10 +492,10 @@ export default function ManagerSettingsPage() {
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
-                  className="mt-1 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                  className="mt-1 border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]"
                 />
               </div>
-              <Button onClick={handleChangePassword} disabled={changingPassword} className="bg-purple-600 hover:bg-purple-700">
+              <Button onClick={handleChangePassword} disabled={changingPassword} className="bg-[#118CDB] hover:bg-[#0F7BC7]">
                 {changingPassword ? "Updating..." : "Update Password"}
               </Button>
             </div>
@@ -469,7 +503,7 @@ export default function ManagerSettingsPage() {
             <div className="mt-8 pt-8 border-t border-gray-200">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Two-Factor Authentication</h3>
               <p className="text-sm text-gray-600 mb-6">
-                Add an extra layer of security to your account
+                Add an extra layer of security to your account. When enabled, you'll receive a verification code via email.
               </p>
               
               <div className="space-y-4">
@@ -477,7 +511,7 @@ export default function ManagerSettingsPage() {
                   <Button 
                     variant={twoFactorEnabled ? "destructive" : "default"}
                     onClick={handleToggle2FA}
-                    className={!twoFactorEnabled ? "bg-purple-600 hover:bg-purple-700" : ""}
+                    className={!twoFactorEnabled ? "bg-[#118CDB] hover:bg-[#0F7BC7]" : ""}
                   >
                     {twoFactorEnabled ? "Disable 2FA" : "Enable 2FA"}
                   </Button>
@@ -489,17 +523,22 @@ export default function ManagerSettingsPage() {
                   )}
                 </div>
 
-                {showSecret && twoFactorSecret && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 max-w-md">
-                    <p className="text-sm font-semibold text-purple-900 mb-3">
-                      Your 2FA Secret Code:
+                {twoFactorEnabled && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 max-w-md">
+                    <p className="text-sm font-semibold text-blue-900 mb-3">
+                      Email-based Two-Factor Authentication is Active
                     </p>
-                    <div className="bg-white p-4 rounded-lg border border-purple-300 font-mono text-lg text-center mb-3">
-                      {twoFactorSecret}
-                    </div>
-                    <p className="text-xs text-purple-700">
-                      Save this code securely. You'll need it to verify your identity.
+                    <p className="text-xs text-blue-700 mb-4">
+                      When you need to verify your identity, a 6-digit code will be sent to your email address: {profile.email}
                     </p>
+                    <Button 
+                      onClick={handleSendCode}
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    >
+                      Send Test Code
+                    </Button>
                   </div>
                 )}
 
@@ -509,11 +548,11 @@ export default function ManagerSettingsPage() {
                     <div className="flex gap-2 mt-1">
                       <Input 
                         id="verificationCode"
-                        placeholder="Enter 6-digit code"
+                        placeholder="Enter 6-digit code from email"
                         value={verificationCode}
                         onChange={(e) => setVerificationCode(e.target.value)}
                         maxLength={6}
-                        className="border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                        className="border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]"
                       />
                       <Button 
                         onClick={handleVerify2FA}
@@ -524,7 +563,7 @@ export default function ManagerSettingsPage() {
                       </Button>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Enter your secret code to test verification
+                      Enter the code sent to your email to test verification
                     </p>
                   </div>
                 )}

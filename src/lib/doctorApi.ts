@@ -253,6 +253,34 @@ export const addReferral = async (appointmentId: string, referedDoctorId: string
     }
 };
 
+// Get available doctors for referral
+export const getAvailableDoctors = async () => {
+    try {
+        const response = await fetch(API_ENDPOINTS.QUEUE.AVAILABLE_DOCTORS, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 204) {
+            return [];
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch available doctors');
+        }
+
+        const text = await response.text();
+        if (!text) {
+            return [];
+        }
+
+        return JSON.parse(text);
+    } catch (error) {
+        console.error('Error fetching available doctors:', error);
+        return [];
+    }
+};
+
 // Payments API
 export const getPayments = async (): Promise<Payment[]> => {
     try {
@@ -356,7 +384,9 @@ export const updateAppointmentToConsultation = async (appointmentId: string) => 
         );
 
         if (!response.ok) {
-            throw new Error('Failed to update appointment');
+            const errorText = await response.text();
+            console.error('Failed to start consultation:', response.status, errorText);
+            throw new Error(`Failed to update appointment (${response.status}): ${errorText}`);
         }
 
         return await response.json();
@@ -384,5 +414,54 @@ export const updateAppointmentToReferral = async (appointmentId: string) => {
     } catch (error) {
         console.error('Error updating appointment:', error);
         throw error;
+    }
+};
+
+// Dashboard Stats API
+export const getDashboardStats = async (): Promise<OverviewStats> => {
+    try {
+        const response = await fetch(API_ENDPOINTS.DOCTOR.DASHBOARD_STATS, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 204) {
+            return {
+                waiting: 0,
+                inConsultation: 0,
+                referred: 0,
+                completed: 0,
+            };
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch dashboard stats');
+        }
+
+        const text = await response.text();
+        if (!text) {
+            return {
+                waiting: 0,
+                inConsultation: 0,
+                referred: 0,
+                completed: 0,
+            };
+        }
+
+        const data = JSON.parse(text);
+        return {
+            waiting: data.totalInQueue || 0,
+            inConsultation: data.inConsultation || 0,
+            referred: data.referred || 0,
+            completed: data.completed || 0,
+        };
+    } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        return {
+            waiting: 0,
+            inConsultation: 0,
+            referred: 0,
+            completed: 0,
+        };
     }
 };

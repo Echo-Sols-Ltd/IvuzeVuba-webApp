@@ -23,7 +23,7 @@ export default function ConsultationTable({ consultations }: ConsultationTablePr
     const exportData = consultations.map(c => ({
       Date: c.date,
       Patient: c.patientName,
-      "Patient ID": c.patientId,
+      "Patient ID": c.patientId.substring(0, 8),
       Diagnosis: c.diagnosis || "N/A",
       Status: c.status,
       Duration: c.duration ? `${c.duration} min` : "N/A",
@@ -38,7 +38,7 @@ export default function ConsultationTable({ consultations }: ConsultationTablePr
     const exportData = [{
       Date: consultation.date,
       Patient: consultation.patientName,
-      "Patient ID": consultation.patientId,
+      "Patient ID": consultation.patientId.substring(0, 8),
       Diagnosis: consultation.diagnosis || "N/A",
       Status: consultation.status,
       Duration: consultation.duration ? `${consultation.duration} min` : "N/A",
@@ -81,7 +81,7 @@ export default function ConsultationTable({ consultations }: ConsultationTablePr
                 <tr key={c.id || i} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-2">{new Date(c.date).toLocaleDateString()}</td>
                   <td className="px-4 py-2">{c.patientName}</td>
-                  <td className="px-4 py-2">{c.patientId}</td>
+                  <td className="px-4 py-2">{c.patientId.substring(0, 8)}</td>
                   <td className="px-4 py-2">{c.diagnosis || "N/A"}</td>
                   <td className="px-4 py-2">{c.duration ? `${c.duration} min` : "N/A"}</td>
                   <td className="px-4 py-2">

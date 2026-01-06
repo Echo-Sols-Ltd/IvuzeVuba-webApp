@@ -22,19 +22,7 @@ interface Department {
   head: DepartmentHead | string;
   staffCount: number;
   description: string;
-  color?: string;
 }
-
-const colorOptions = [
-  "bg-blue-500",
-  "bg-pink-500",
-  "bg-red-500",
-  "bg-purple-500",
-  "bg-green-500",
-  "bg-yellow-500",
-  "bg-indigo-500",
-  "bg-orange-500",
-];
 
 export default function DepartmentManagement() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -69,7 +57,7 @@ export default function DepartmentManagement() {
 
       if (response.ok) {
         const data = await response.json();
-        const transformedDepts = data.map((dept: any, index: number) => {
+        const transformedDepts = data.map((dept: any) => {
           const head = dept.head 
             ? typeof dept.head === 'string' 
               ? dept.head 
@@ -86,7 +74,6 @@ export default function DepartmentManagement() {
             head: head,
             staffCount: dept.staffCount || 0,
             description: dept.description || "No description available",
-            color: colorOptions[index % colorOptions.length],
           };
         });
         
@@ -268,23 +255,27 @@ export default function DepartmentManagement() {
           </div>
         ) : filteredDepartments.length > 0 ? (
           filteredDepartments.map((dept) => (
-            <Card key={dept.id} className="overflow-hidden">
-              <div className={`h-2 ${dept.color || 'bg-gray-500'}`}></div>
-              <div className="p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-lg">{dept.name}</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {typeof dept.head === 'string' 
-                        ? dept.head 
-                        : dept.head?.name || 'No head assigned'}
-                    </p>
+            <Card key={dept.id} className="overflow-hidden border border-gray-200 hover:shadow-lg transition-all duration-200 hover:border-blue-200">
+              <div className="p-6">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-100 p-2 rounded-lg">
+                      <Building2 className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-800">{dept.name}</h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Head: {typeof dept.head === 'string' 
+                          ? dept.head 
+                          : dept.head?.name || 'No head assigned'}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button 
                       variant="outline" 
                       size="icon" 
-                      className="h-8 w-8"
+                      className="h-8 w-8 hover:bg-blue-50 hover:border-blue-200"
                       onClick={() => handleEdit(dept)}
                     >
                       <Edit2 className="h-4 w-4" />
@@ -292,23 +283,24 @@ export default function DepartmentManagement() {
                     <Button 
                       variant="outline" 
                       size="icon" 
-                      className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
+                      className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                       onClick={() => handleDelete(dept.id)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500 mt-2 line-clamp-2">
+                <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                   {dept.description}
                 </p>
-                <div className="mt-4 flex justify-between items-center text-sm">
-                  <span className="flex items-center text-gray-600">
-                    <Users className="h-4 w-4 mr-1" />
-                    {dept.staffCount} {dept.staffCount === 1 ? 'member' : 'members'}
+                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                  <span className="flex items-center text-gray-600 text-sm">
+                    <Users className="h-4 w-4 mr-2" />
+                    <span className="font-medium">{dept.staffCount}</span>
+                    <span className="ml-1">{dept.staffCount === 1 ? 'member' : 'members'}</span>
                   </span>
                   <span className="text-blue-600 hover:text-blue-800 cursor-pointer text-sm font-medium">
-                    View all
+                    View all →
                   </span>
                 </div>
               </div>
@@ -332,7 +324,7 @@ export default function DepartmentManagement() {
           fetchDepartments();
           setIsModalOpen(false);
         }}
-        initialData={currentDepartment}
+        department={currentDepartment}
       />
     </div>
   );

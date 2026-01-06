@@ -68,7 +68,7 @@ export default function PaymentList({ payments, searchQuery = "", statusFilter =
               />
               <div>
                 <p className="font-medium">{p.name}</p>
-                <p className="text-xs text-gray-500">ID: {p.id}</p>
+                <p className="text-xs text-gray-500">ID: {p.id.substring(0, 8)}</p>
                 <p className="text-xs text-gray-500">
                   Service Date: {p.serviceDate}
                 </p>

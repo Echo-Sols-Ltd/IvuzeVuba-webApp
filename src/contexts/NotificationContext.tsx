@@ -70,11 +70,34 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     setNotifications(prev => [newNotification, ...prev]);
     
-    // Show toast notification
-    toast[newNotification.type](newNotification.title, {
-      description: newNotification.message,
-      duration: 5000,
-    });
+    // Show toast notification using correct Sonner API
+    switch (newNotification.type) {
+      case 'success':
+        toast.success(newNotification.title, {
+          description: newNotification.message,
+          duration: 5000,
+        });
+        break;
+      case 'error':
+        toast.error(newNotification.title, {
+          description: newNotification.message,
+          duration: 5000,
+        });
+        break;
+      case 'warning':
+        toast.warning(newNotification.title, {
+          description: newNotification.message,
+          duration: 5000,
+        });
+        break;
+      case 'info':
+      default:
+        toast.info(newNotification.title, {
+          description: newNotification.message,
+          duration: 5000,
+        });
+        break;
+    }
   };
 
   const markAsRead = (id: string) => {

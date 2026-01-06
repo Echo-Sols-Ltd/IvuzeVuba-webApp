@@ -12,6 +12,7 @@ interface QueuePatientLocal {
   serviceDate: string;
   imageUrl: string;
   urgent: boolean;
+  status: string; // Add status field
 }
 
 export default function PatientQueueList({
@@ -24,30 +25,36 @@ export default function PatientQueueList({
   const [patients, setPatients] = useState<QueuePatientLocal[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchQueue = async () => {
-      try {
-        const queueData = await getDoctorQueue();
-        // Transform API data to component format
-        const transformedData: QueuePatientLocal[] = queueData.map((item: any) => ({
-          id: item.id || item.appointmentId || "",
-          name: item.patientName || "Unknown Patient",
-          description: item.reason || item.chiefComplaint || "No description",
-          serviceDate: item.appointmentTime || item.scheduledTime || new Date().toISOString(),
-          imageUrl: item.patientImage || `https://i.pravatar.cc/150?u=${item.id}`,
-          urgent: item.priority === "URGENT" || item.urgent || false,
-        }));
-        setPatients(transformedData);
-      } catch (error) {
-        console.error("Error fetching queue:", error);
-        setPatients([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchQueue = async () => {
+    try {
+      const queueData = await getDoctorQueue();
+      // Transform API data to component format
+      const transformedData: QueuePatientLocal[] = queueData.map((item: any) => ({
+        id: item.id || item.appointmentId || "",
+        name: item.patientName || "Unknown Patient",
+        description: item.reason || item.chiefComplaint || "No description",
+        serviceDate: item.appointmentTime || item.scheduledTime || new Date().toISOString(),
+        imageUrl: item.patientImage || `https://i.pravatar.cc/150?u=${item.id}`,
+        urgent: item.priority === "URGENT" || item.urgent || false,
+        status: item.status || "SCHEDULED", // Include status from API
+      }));
+      setPatients(transformedData);
+    } catch (error) {
+      console.error("Error fetching queue:", error);
+      setPatients([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchQueue();
   }, []);
+
+  const handleRefresh = () => {
+    setLoading(true);
+    fetchQueue();
+  };
 
   if (loading) {
     return <LoadingSpinner />;
@@ -72,7 +79,11 @@ export default function PatientQueueList({
       <h3 className="text-base font-medium">Today</h3>
       {filteredPatients.length > 0 ? (
         filteredPatients.map((patient, idx) => (
-          <PatientCard key={patient.id || idx} patient={{ ...patient, image: patient.imageUrl }} />
+          <PatientCard 
+            key={patient.id || idx} 
+            patient={{ ...patient, image: patient.imageUrl }} 
+            onRefresh={handleRefresh}
+          />
         ))
       ) : (
         <p className="text-gray-500">No patients match your filters.</p>

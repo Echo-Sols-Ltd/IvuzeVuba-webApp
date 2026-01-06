@@ -44,21 +44,10 @@ export default function CreateVisitPage() {
     reason: "",
     preferredDate: "",
   });
-  const [isMobile, setIsMobile] = useState(false);
   const [date, setDate] = useState<Date>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableDepartments, setAvailableDepartments] = useState<any[]>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -271,35 +260,40 @@ export default function CreateVisitPage() {
     },
   ];
 
-  if (isMobile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50">
-        <Navbar />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50">
+      <Navbar />
+      
+      {/* Mobile and Tablet Layout */}
+      <div className="lg:hidden">
         <PatientSidebar isCollapsed={false} />
-        <div className="pt-16 px-4 pb-4">
+        <div className="pt-16 px-3 sm:px-4 md:px-6 pb-4 max-w-sm mx-auto sm:max-w-md md:max-w-2xl">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-6"
+            className="mb-4 sm:mb-6"
           >
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               Book Appointment
             </h1>
-            <p className="text-gray-600 text-sm mt-1">Schedule your visit with our healthcare professionals</p>
+            <p className="text-gray-600 text-xs sm:text-sm md:text-base mt-1">
+              Schedule your visit with our healthcare professionals
+            </p>
           </motion.div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4 md:space-y-6">
+            {/* Department Selection */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-4"
+              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-3 sm:p-4 md:p-6"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 md:mb-6">
                 Choose Department
               </h2>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 {departments.map((dept, index) => {
                   const Icon = getDepartmentIcon(dept.name);
                   const isSelected = selectedDepartment === dept.id;
@@ -310,24 +304,24 @@ export default function CreateVisitPage() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
                       onClick={() => handleDepartmentSelect(dept.id)}
-                      className={`p-3 rounded-lg border-2 transition-all duration-200 text-left ${isSelected
+                      className={`p-2 sm:p-3 md:p-4 rounded-lg border-2 transition-all duration-200 text-left ${isSelected
                         ? "border-blue-500 bg-blue-50 shadow-md"
                         : `${dept.color} border-transparent hover:shadow-md`
                         }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${isSelected ? "bg-blue-500" : "bg-white"}`}>
-                          <Icon className={`h-4 w-4 ${isSelected ? "text-white" : dept.textColor}`} />
+                      <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+                        <div className={`p-1.5 sm:p-2 md:p-3 rounded-lg ${isSelected ? "bg-blue-500" : "bg-white"}`}>
+                          <Icon className={`h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 ${isSelected ? "text-white" : dept.textColor}`} />
                         </div>
-                        <div className="flex-1">
-                          <h3 className={`font-medium text-sm ${isSelected ? "text-blue-900" : "text-gray-900"}`}>
+                        <div className="flex-1 min-w-0">
+                          <h3 className={`font-medium text-xs sm:text-sm md:text-base truncate ${isSelected ? "text-blue-900" : "text-gray-900"}`}>
                             {dept.name}
                           </h3>
-                          <p className={`text-xs mt-1 ${isSelected ? "text-blue-700" : "text-gray-600"}`}>
+                          <p className={`text-xs sm:text-sm mt-0.5 sm:mt-1 line-clamp-2 ${isSelected ? "text-blue-700" : "text-gray-600"}`}>
                             {dept.description}
                           </p>
                         </div>
-                        {isSelected && <CheckCircle className="h-5 w-5 text-blue-500" />}
+                        {isSelected && <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-blue-500 flex-shrink-0" />}
                       </div>
                     </motion.button>
                   );
@@ -335,19 +329,20 @@ export default function CreateVisitPage() {
               </div>
             </motion.div>
 
+            {/* Visit Details Form */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-4"
+              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-3 sm:p-4 md:p-6"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 md:mb-6">
                 Visit Details
               </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4 md:space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="reason" className="text-sm font-semibold text-gray-700">
+                  <Label htmlFor="reason" className="text-xs sm:text-sm md:text-base font-semibold text-gray-700">
                     Reason for visit
                   </Label>
                   <Textarea
@@ -355,12 +350,12 @@ export default function CreateVisitPage() {
                     placeholder="Describe your symptoms, concerns, or reason for the visit..."
                     value={formData.reason}
                     onChange={(e) => handleInputChange("reason", e.target.value)}
-                    className="min-h-[80px] resize-none border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="min-h-[60px] sm:min-h-[80px] md:min-h-[100px] resize-none border-gray-200 focus:border-blue-500 focus:ring-blue-500 text-xs sm:text-sm md:text-base"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="preferredDate" className="text-sm font-semibold text-gray-700">
+                  <Label htmlFor="preferredDate" className="text-xs sm:text-sm md:text-base font-semibold text-gray-700">
                     Preferred Date
                   </Label>
                   <Popover>
@@ -368,15 +363,15 @@ export default function CreateVisitPage() {
                       <Button
                         variant="outline"
                         className={cn(
-                          "w-full justify-start text-left font-normal border-gray-200 hover:border-blue-500",
+                          "w-full justify-start text-left font-normal border-gray-200 hover:border-blue-500 h-8 sm:h-9 md:h-10 text-xs sm:text-sm md:text-base",
                           !date && "text-muted-foreground"
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <CalendarIcon className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                         {date ? format(date, "PPP") : <span>Select a date</span>}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={date}
@@ -389,40 +384,41 @@ export default function CreateVisitPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 shadow-lg"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-2 sm:py-2.5 md:py-3 shadow-lg text-xs sm:text-sm md:text-base"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Creating Appointment...
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <span className="text-xs sm:text-sm">Creating...</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <span>Book Appointment</span>
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
                     </div>
                   )}
                 </Button>
               </form>
             </motion.div>
 
+            {/* Preparation Tips */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-4"
+              className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg p-3 sm:p-4 md:p-6"
             >
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 md:mb-6">
                 Preparation Tips
               </h2>
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3 md:space-y-4">
                 {experienceTips.map((tip, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-gray-50">
-                      <tip.icon className={`h-4 w-4 ${tip.color}`} />
+                  <div key={index} className="flex items-start gap-2 sm:gap-3">
+                    <div className="p-1.5 sm:p-2 rounded-lg bg-gray-50 flex-shrink-0">
+                      <tip.icon className={`h-3 w-3 sm:h-4 sm:w-4 md:h-5 md:w-5 ${tip.color}`} />
                     </div>
-                    <p className="text-sm text-gray-700 flex-1">{tip.text}</p>
+                    <p className="text-xs sm:text-sm md:text-base text-gray-700 flex-1 leading-relaxed">{tip.text}</p>
                   </div>
                 ))}
               </div>
@@ -430,41 +426,37 @@ export default function CreateVisitPage() {
           </div>
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-50">
-      <Navbar />
-      <div className="flex">
+      {/* Desktop Layout */}
+      <div className="hidden lg:flex">
         <div className="w-64 flex-shrink-0">
           <PatientSidebar isCollapsed={false} />
         </div>
-        <div className="flex-1 pt-20 p-4 min-h-screen overflow-y-auto">
+        <div className="flex-1 pt-20 p-4 xl:p-6 min-h-screen overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="mb-6"
           >
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-3xl xl:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               Book Appointment
             </h1>
-            <p className="text-gray-600 mt-1">Schedule your visit with our healthcare professionals</p>
+            <p className="text-gray-600 mt-1 text-base xl:text-lg">Schedule your visit with our healthcare professionals</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="lg:col-span-2"
+              className="xl:col-span-2"
             >
               <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/60 shadow-lg hover:shadow-xl transition-all duration-300 p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Choose Your Department
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {departments.map((dept, index) => {
                     const Icon = getDepartmentIcon(dept.name);
                     const isSelected = selectedDepartment === dept.id;

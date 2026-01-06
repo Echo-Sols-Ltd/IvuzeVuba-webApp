@@ -5,7 +5,7 @@ export interface PatientDashboard {
     upcomingAppointments: number;
     activePrescriptions: number;
     walletBalance: number;
-    recentVisits: number;
+    recentVisits: number | any[]; // Allow both number and array to handle API inconsistencies
 }
 
 // Appointment Types
@@ -17,6 +17,7 @@ export interface Appointment {
     status: string;
     queuePosition?: number;
     doctorName?: string;
+    assignedDoctorName?: string;
     scheduledTime?: string;
 }
 
@@ -102,11 +103,31 @@ export const getPatientDashboard = async (): Promise<PatientDashboard> => {
         }
 
         const data = await parseResponse(response);
-        return data || {
-            upcomingAppointments: 0,
-            activePrescriptions: 0,
-            walletBalance: 0,
-            recentVisits: 0,
+        
+        if (!data) {
+            return {
+                upcomingAppointments: 0,
+                activePrescriptions: 0,
+                walletBalance: 0,
+                recentVisits: 0,
+            };
+        }
+
+        // Normalize the recentVisits field
+        let recentVisitsCount = 0;
+        if (typeof data.recentVisits === 'number') {
+            recentVisitsCount = data.recentVisits;
+        } else if (Array.isArray(data.recentVisits)) {
+            recentVisitsCount = data.recentVisits.length;
+        } else if (data.recentVisits && typeof data.recentVisits === 'object') {
+            recentVisitsCount = data.recentVisits.count || 0;
+        }
+
+        return {
+            upcomingAppointments: Number(data.upcomingAppointments) || 0,
+            activePrescriptions: Number(data.activePrescriptions) || 0,
+            walletBalance: Number(data.walletBalance) || 0,
+            recentVisits: recentVisitsCount,
         };
     } catch (error) {
         console.error('Error fetching patient dashboard:', error);
@@ -475,5 +496,141 @@ export const deletePaymentMethod = async (id: string) => {
     } catch (error) {
         console.error('Error deleting payment method:', error);
         throw error;
+    }
+};
+
+// Medical Records API
+export interface VitalSigns {
+    id: string;
+    systolicBp?: number;
+    diastolicBp?: number;
+    heartRate?: number;
+    temperature?: number;
+    temperatureUnit?: string;
+    oxygenSaturation?: number;
+    weight?: number;
+    weightUnit?: string;
+    height?: number;
+    heightUnit?: string;
+    respiratoryRate?: number;
+    notes?: string;
+    createdAt: string;
+}
+
+export interface ClinicalNote {
+    id: string;
+    noteType: string;
+    title?: string;
+    content: string;
+    isPrivate: boolean;
+    createdAt: string;
+}
+
+export interface MedicalOrder {
+    id: string;
+    orderType: string;
+    orderName: string;
+    description?: string;
+    instructions?: string;
+    status: string;
+    priority: string;
+    scheduledDate?: string;
+    completedDate?: string;
+    results?: string;
+    createdAt: string;
+}
+
+export interface ClinicalAlert {
+    id: string;
+    alertType: string;
+    severity: string;
+    title: string;
+    message: string;
+    isActive: boolean;
+    acknowledged: boolean;
+    createdAt: string;
+}
+
+export const getVitalSigns = async (): Promise<VitalSigns[]> => {
+    try {
+        const response = await fetch(API_ENDPOINTS.PATIENT.VITAL_SIGNS, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 204) return [];
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch vital signs');
+        }
+
+        const data = await parseResponse(response);
+        return data || [];
+    } catch (error) {
+        console.error('Error fetching vital signs:', error);
+        return [];
+    }
+};
+
+export const getClinicalNotes = async (): Promise<ClinicalNote[]> => {
+    try {
+        const response = await fetch(API_ENDPOINTS.PATIENT.CLINICAL_NOTES, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 204) return [];
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch clinical notes');
+        }
+
+        const data = await parseResponse(response);
+        return data || [];
+    } catch (error) {
+        console.error('Error fetching clinical notes:', error);
+        return [];
+    }
+};
+
+export const getMedicalOrders = async (): Promise<MedicalOrder[]> => {
+    try {
+        const response = await fetch(API_ENDPOINTS.PATIENT.MEDICAL_ORDERS, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 204) return [];
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch medical orders');
+        }
+
+        const data = await parseResponse(response);
+        return data || [];
+    } catch (error) {
+        console.error('Error fetching medical orders:', error);
+        return [];
+    }
+};
+
+export const getClinicalAlerts = async (): Promise<ClinicalAlert[]> => {
+    try {
+        const response = await fetch(API_ENDPOINTS.PATIENT.CLINICAL_ALERTS, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 204) return [];
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch clinical alerts');
+        }
+
+        const data = await parseResponse(response);
+        return data || [];
+    } catch (error) {
+        console.error('Error fetching clinical alerts:', error);
+        return [];
     }
 };

@@ -21,6 +21,7 @@ export interface DepartmentFormData {
   name: string;
   description: string;
   headId?: string;
+  staffCount?: number;
 }
 
 interface AddDepartmentModalProps {
@@ -40,6 +41,7 @@ export default function AddDepartmentModal({
     name: "",
     description: "",
     headId: "",
+    staffCount: 0,
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -51,13 +53,15 @@ export default function AddDepartmentModal({
         id: department.id,
         name: department.name,
         description: department.description || '',
-        headId: department.headId || ''
+        headId: department.headId || '',
+        staffCount: department.staffCount || 0
       });
     } else {
       setFormData({
         name: "",
         description: "",
-        headId: ""
+        headId: "",
+        staffCount: 0
       });
     }
   }, [department]);
@@ -98,7 +102,7 @@ export default function AddDepartmentModal({
           title: "Success",
           description: `Department ${isEdit ? 'updated' : 'created'} successfully`,
         });
-        setFormData({ name: "", description: "", headId: "" });
+        setFormData({ name: "", description: "", headId: "", staffCount: 0 });
         onSuccess?.();
         onClose();
       } else {

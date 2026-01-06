@@ -54,6 +54,7 @@ export default function PatientSettingsPage() {
       if (response.ok) {
         const data = await response.json();
         console.log("Profile data received:", data);
+        console.log("Email from API:", data.email);
         setProfile({
           firstName: data.firstName || "",
           lastName: data.lastName === "string" ? "" : (data.lastName || ""),
@@ -226,11 +227,9 @@ export default function PatientSettingsPage() {
 
         if (response.ok) {
           setTwoFactorEnabled(true);
-          setTwoFactorSecret(data.secret);
-          setShowSecret(true);
           toast({
             title: "Success",
-            description: "Two-factor authentication enabled",
+            description: data.message || "Two-factor authentication enabled. Check your email for the verification code.",
           });
         } else {
           toast({
@@ -244,6 +243,36 @@ export default function PatientSettingsPage() {
       toast({
         title: "Error",
         description: "Failed to toggle 2FA",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendCode = async () => {
+    try {
+      const response = await fetch(API_ENDPOINTS.AUTH.SEND_2FA_CODE, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Success",
+          description: data.message || "2FA code sent to your email",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to send 2FA code",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send 2FA code",
         variant: "destructive",
       });
     }
@@ -360,15 +389,20 @@ export default function PatientSettingsPage() {
                       className={`mt-1 ${!isEditing ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="email" className="text-sm font-semibold text-gray-700">Email</Label>
+                  <div className="relative">
+                    <Label htmlFor="email" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      Email Address
+                      <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Read-only</span>
+                    </Label>
                     <Input 
                       id="email" 
                       type="email" 
                       value={profile.email} 
                       disabled
-                      className="mt-1 bg-gray-50/80 border-gray-200"
+                      className="mt-1 bg-gray-50/80 border-gray-200 text-gray-700 font-medium"
+                      placeholder="Loading email..."
                     />
+                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed after account creation</p>
                   </div>
                   <div>
                     <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">Phone</Label>
@@ -469,7 +503,7 @@ export default function PatientSettingsPage() {
                 <div className="mt-8 pt-8 border-t border-gray-200">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Two-Factor Authentication</h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    Add an extra layer of security to your account
+                    Add an extra layer of security to your account. When enabled, you'll receive a verification code via email.
                   </p>
                   
                   <div className="space-y-4">
@@ -489,17 +523,22 @@ export default function PatientSettingsPage() {
                       )}
                     </div>
 
-                    {showSecret && twoFactorSecret && (
+                    {twoFactorEnabled && (
                       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 max-w-md">
                         <p className="text-sm font-semibold text-blue-900 mb-3">
-                          Your 2FA Secret Code:
+                          Email-based Two-Factor Authentication is Active
                         </p>
-                        <div className="bg-white p-4 rounded-lg border border-blue-300 font-mono text-lg text-center mb-3">
-                          {twoFactorSecret}
-                        </div>
-                        <p className="text-xs text-blue-700">
-                          Save this code securely. You'll need it to verify your identity.
+                        <p className="text-xs text-blue-700 mb-4">
+                          When you need to verify your identity, a 6-digit code will be sent to your email address: {profile.email}
                         </p>
+                        <Button 
+                          onClick={handleSendCode}
+                          variant="outline"
+                          size="sm"
+                          className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                        >
+                          Send Test Code
+                        </Button>
                       </div>
                     )}
 
@@ -509,7 +548,7 @@ export default function PatientSettingsPage() {
                         <div className="flex gap-2 mt-1">
                           <Input 
                             id="verificationCode"
-                            placeholder="Enter 6-digit code"
+                            placeholder="Enter 6-digit code from email"
                             value={verificationCode}
                             onChange={(e) => setVerificationCode(e.target.value)}
                             maxLength={6}
@@ -524,7 +563,7 @@ export default function PatientSettingsPage() {
                           </Button>
                         </div>
                         <p className="text-xs text-gray-500 mt-1">
-                          Enter your secret code to test verification
+                          Enter the code sent to your email to test verification
                         </p>
                       </div>
                     )}

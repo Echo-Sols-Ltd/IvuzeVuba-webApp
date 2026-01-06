@@ -110,13 +110,26 @@ const DashboardPage = () => {
           return { balance: 0, currency: 'RWF' };
         });
 
+        // Handle recentVisits properly - it might be an array or number
+        let recentVisitsCount = 0;
+        if (typeof dashboardData.recentVisits === 'number') {
+          recentVisitsCount = dashboardData.recentVisits;
+        } else if (Array.isArray(dashboardData.recentVisits)) {
+          recentVisitsCount = dashboardData.recentVisits.length;
+        } else if (dashboardData.recentVisits && typeof dashboardData.recentVisits === 'object') {
+          // If it's an object, try to get a count property or default to 0
+          recentVisitsCount = (dashboardData.recentVisits as any).count || 0;
+        }
+
         // Update state with fetched data
         setDashboard(prev => ({
           ...prev,
           ...dashboardData,
-          totalAppointments: dashboardData.totalAppointments || 0,
-          completedAppointments: dashboardData.completedAppointments || 0,
-          totalPrescriptions: dashboardData.totalPrescriptions || 0
+          recentVisits: recentVisitsCount, // Ensure this is always a number
+          totalAppointments: dashboardData.totalAppointments || appointmentsData.length || 0,
+          completedAppointments: dashboardData.completedAppointments || 
+            appointmentsData.filter(a => a.status === 'completed').length || 0,
+          totalPrescriptions: dashboardData.totalPrescriptions || prescriptionsData.length || 0
         }));
         setAppointments(appointmentsData);
         setPrescriptions(prescriptionsData);
@@ -206,8 +219,8 @@ const DashboardPage = () => {
                   id: a.id,
                   hospital: a.hospital?.name || 'Clinic',
                   date: a.scheduledTime,
-                  department: a.department?.name || 'General',
-                  doctor: a.doctor?.name || 'Dr. Smith',
+                  department: a.departmentName || 'General',
+                  doctor: a.doctorName || a.assignedDoctorName || 'Not assigned yet',
                   status: a.status as "waiting" | "completed" | "canceled"
                 }))} />
               </div>
