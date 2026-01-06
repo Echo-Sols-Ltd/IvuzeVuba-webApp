@@ -298,108 +298,108 @@ const PrescriptionsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="pt-20 flex">
-        <div className="w-64 flex-shrink-0">
-          <PatientSidebar />
-        </div>
-        <div className="flex-1 p-6 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h1 className="text-3xl font-bold text-gray-900">
-              My prescriptions
-            </h1>
-            <p className="text-gray-600 mt-2">Manage your medications</p>
-          </motion.div>
+      <div className="flex pt-16">
+        <PatientSidebar />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h1 className="text-3xl font-bold text-gray-900">
+                My prescriptions
+              </h1>
+              <p className="text-gray-600 mt-2">Manage your medications</p>
+            </motion.div>
 
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <Select
-                value={selectedDepartment}
-                onValueChange={setSelectedDepartment}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter Department" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept.value} value={dept.value}>
-                      {dept.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <Select
+                  value={selectedDepartment}
+                  onValueChange={setSelectedDepartment}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter Department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments.map((dept) => (
+                      <SelectItem key={dept.value} value={dept.value}>
+                        {dept.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-64"
-                />
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 w-64"
+                  />
+                </div>
               </div>
+
+              <Button
+                onClick={handleDownloadAll}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export All
+              </Button>
             </div>
 
-            <Button
-              onClick={handleDownloadAll}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Export All
-            </Button>
+            <Tabs defaultValue="active" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="active">
+                  Active({activePrescriptions.length})
+                </TabsTrigger>
+                <TabsTrigger value="completed">
+                  Completed({completedPrescriptions.length})
+                </TabsTrigger>
+                <TabsTrigger value="expired">
+                  Expired({expiredPrescriptions.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="active" className="mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {activePrescriptions.map((prescription) => (
+                    <PrescriptionCard
+                      key={prescription.id}
+                      prescription={prescription}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="completed" className="mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {completedPrescriptions.map((prescription) => (
+                    <PrescriptionCard
+                      key={prescription.id}
+                      prescription={prescription}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="expired" className="mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {expiredPrescriptions.map((prescription) => (
+                    <PrescriptionCard
+                      key={prescription.id}
+                      prescription={prescription}
+                    />
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
-
-          <Tabs defaultValue="active" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="active">
-                Active({activePrescriptions.length})
-              </TabsTrigger>
-              <TabsTrigger value="completed">
-                Completed({completedPrescriptions.length})
-              </TabsTrigger>
-              <TabsTrigger value="expired">
-                Expired({expiredPrescriptions.length})
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="active" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {activePrescriptions.map((prescription) => (
-                  <PrescriptionCard
-                    key={prescription.id}
-                    prescription={prescription}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="completed" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {completedPrescriptions.map((prescription) => (
-                  <PrescriptionCard
-                    key={prescription.id}
-                    prescription={prescription}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="expired" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {expiredPrescriptions.map((prescription) => (
-                  <PrescriptionCard
-                    key={prescription.id}
-                    prescription={prescription}
-                  />
-                ))}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
+        </main>
       </div>
 
       {/* Prescription Details Modal */}

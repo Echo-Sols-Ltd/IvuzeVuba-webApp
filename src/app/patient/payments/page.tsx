@@ -229,93 +229,93 @@ const PaymentsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <div className="pt-20 flex">
-        <div className="w-64 flex-shrink-0">
-          <PatientSidebar />
-        </div>
-        <div className="flex-1 p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
-              <p className="text-gray-600 mt-2">
-                Manage your payments, wallet balance, and payment methods
-              </p>
+      <div className="flex pt-16">
+        <PatientSidebar />
+        <main className="flex-1 p-6 overflow-y-auto">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Payments</h1>
+                <p className="text-gray-600 mt-2">
+                  Manage your payments, wallet balance, and payment methods
+                </p>
+              </div>
+              <div className="bg-white p-4 rounded-lg border shadow-sm">
+                <p className="text-sm text-gray-600">Current balance</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {currentBalance}
+                </p>
+              </div>
             </div>
-            <div className="bg-white p-4 rounded-lg border shadow-sm">
-              <p className="text-sm text-gray-600">Current balance</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {currentBalance}
-              </p>
-            </div>
-          </div>
 
-          <Tabs
-            value={selectedTab}
-            onValueChange={setSelectedTab}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-4 h-12">
-              <TabsTrigger value="pay-now" className="text-sm font-medium">
-                Pay now
-              </TabsTrigger>
-              <TabsTrigger value="transactions" className="text-sm font-medium">
-                Transactions
-              </TabsTrigger>
-              <TabsTrigger value="wallet" className="text-sm font-medium">
-                Wallet
-              </TabsTrigger>
-              <TabsTrigger value="methods" className="text-sm font-medium">
-                Methods
-              </TabsTrigger>
-            </TabsList>
+            <Tabs
+              value={selectedTab}
+              onValueChange={setSelectedTab}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-4 h-12">
+                <TabsTrigger value="pay-now" className="text-sm font-medium">
+                  Pay now
+                </TabsTrigger>
+                <TabsTrigger value="transactions" className="text-sm font-medium">
+                  Transactions
+                </TabsTrigger>
+                <TabsTrigger value="wallet" className="text-sm font-medium">
+                  Wallet
+                </TabsTrigger>
+                <TabsTrigger value="methods" className="text-sm font-medium">
+                  Methods
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="pay-now" className="mt-8">
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    Pending invoices
-                  </h2>
-                  <p className="text-gray-600 mt-2">
-                    {pendingInvoices.length} invoices awaiting payment
-                  </p>
-                </div>
-
+              <TabsContent value="pay-now" className="mt-8">
                 <div className="space-y-6">
-                  {pendingInvoices.map((invoice) => (
-                    <InvoiceCard
-                      key={invoice.id}
-                      invoice={invoice}
-                      onPayNow={handlePayNow}
-                    />
-                  ))}
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900">
+                      Pending invoices
+                    </h2>
+                    <p className="text-gray-600 mt-2">
+                      {pendingInvoices.length} invoices awaiting payment
+                    </p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {pendingInvoices.map((invoice) => (
+                      <InvoiceCard
+                        key={invoice.id}
+                        invoice={invoice}
+                        onPayNow={handlePayNow}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </TabsContent>
+              </TabsContent>
 
-            <TabsContent value="transactions" className="mt-8">
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    Transaction History
-                  </h2>
-                  <p className="text-gray-600 mt-2">
-                    View all your payment transactions
-                  </p>
+              <TabsContent value="transactions" className="mt-8">
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900">
+                      Transaction History
+                    </h2>
+                    <p className="text-gray-600 mt-2">
+                      View all your payment transactions
+                    </p>
+                  </div>
+
+                  <TransactionsTable transactions={transactions} />
                 </div>
+              </TabsContent>
 
-                <TransactionsTable transactions={transactions} />
-              </div>
-            </TabsContent>
+              <TabsContent value="wallet" className="mt-8">
+                <WalletTab />
+              </TabsContent>
 
-            <TabsContent value="wallet" className="mt-8">
-              <WalletTab />
-            </TabsContent>
-
-            <TabsContent value="methods" className="mt-8">
-              <MethodsTab />
-            </TabsContent>
-          </Tabs>
-        </div>
+              <TabsContent value="methods" className="mt-8">
+                <MethodsTab />
+              </TabsContent>
+            </Tabs>
+          </div>
+        </main>
       </div>
     </div>
   );

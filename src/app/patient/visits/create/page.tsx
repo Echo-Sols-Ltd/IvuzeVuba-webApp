@@ -429,21 +429,19 @@ export default function CreateVisitPage() {
 
       {/* Desktop Layout */}
       <div className="hidden lg:flex">
-        <div className="w-64 flex-shrink-0">
-          <PatientSidebar isCollapsed={false} />
-        </div>
-        <div className="flex-1 pt-20 p-4 xl:p-6 min-h-screen overflow-y-auto">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-6"
-          >
-            <h1 className="text-3xl xl:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Book Appointment
-            </h1>
-            <p className="text-gray-600 mt-1 text-base xl:text-lg">Schedule your visit with our healthcare professionals</p>
-          </motion.div>
+        <PatientSidebar isCollapsed={false} />
+        <main className="flex-1 pt-16 p-4 xl:p-6 min-h-screen overflow-y-auto">
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h1 className="text-3xl xl:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                Book Appointment
+              </h1>
+              <p className="text-gray-600 mt-1 text-base xl:text-lg">Schedule your visit with our healthcare professionals</p>
+            </motion.div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <motion.div
@@ -602,6 +600,7 @@ export default function CreateVisitPage() {
             </motion.div>
           </div>
         </div>
+        </main>
       </div>
     </div>
   );
