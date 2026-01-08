@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,7 @@ interface LoginResponse {
   lastName: string;
 }
 
-export default function UnifiedLoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState<FormData>({
@@ -282,5 +282,13 @@ export default function UnifiedLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function UnifiedLoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

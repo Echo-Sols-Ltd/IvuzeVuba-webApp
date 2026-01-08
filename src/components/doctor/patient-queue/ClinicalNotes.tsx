@@ -5,10 +5,18 @@ import { useParams } from "next/navigation";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
+interface ClinicalNote {
+  id?: string;
+  title?: string;
+  content: string;
+  createdAt: string;
+  noteType?: string;
+}
+
 export default function ClinicalNotes() {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
-  const [existingNotes, setExistingNotes] = useState([]);
+  const [existingNotes, setExistingNotes] = useState<ClinicalNote[]>([]);
   const { toast } = useToast();
   const params = useParams();
   const patientId = params?.patientId;

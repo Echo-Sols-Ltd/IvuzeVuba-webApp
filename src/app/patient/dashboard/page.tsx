@@ -122,15 +122,17 @@ const DashboardPage = () => {
         }
 
         // Update state with fetched data
-        setDashboard(prev => ({
-          ...prev,
-          ...dashboardData,
-          recentVisits: recentVisitsCount, // Ensure this is always a number
-          totalAppointments: dashboardData.totalAppointments || appointmentsData.length || 0,
-          completedAppointments: dashboardData.completedAppointments ||
-            appointmentsData.filter(a => a.status === 'completed').length || 0,
-          totalPrescriptions: dashboardData.totalPrescriptions || prescriptionsData.length || 0
-        }));
+        const updatedDashboard: UIDashboardStats = {
+          upcomingAppointments: dashboardData.upcomingAppointments,
+          activePrescriptions: dashboardData.activePrescriptions,
+          walletBalance: dashboardData.walletBalance,
+          recentVisits: recentVisitsCount,
+          totalAppointments: appointmentsData.length || 0,
+          completedAppointments: appointmentsData.filter(a => a.status === 'completed').length || 0,
+          totalPrescriptions: prescriptionsData.length || 0
+        };
+        
+        setDashboard(updatedDashboard);
         setAppointments(appointmentsData);
         setPrescriptions(prescriptionsData);
         setWallet(walletData);
@@ -217,8 +219,8 @@ const DashboardPage = () => {
                 <UpcomingAppointmentCard appointments={appointments} />
                 <RecentVisitsCard visits={appointments.slice(0, 3).map(a => ({
                   id: a.id,
-                  hospital: a.hospital?.name || 'Clinic',
-                  date: a.scheduledTime,
+                  hospital: 'Clinic',
+                  date: a.scheduledTime || a.preferredDate || 'Not scheduled',
                   department: a.departmentName || 'General',
                   doctor: a.doctorName || a.assignedDoctorName || 'Not assigned yet',
                   status: a.status as "waiting" | "completed" | "canceled"
@@ -226,7 +228,7 @@ const DashboardPage = () => {
               </div>
 
               <div className="grid gap-6 md:grid-cols-2">
-                <RecentMedicationsCard prescriptions={prescriptions.slice(0, 3)} />
+                <RecentMedicationsCard />
                 <NotificationsCard />
               </div>
             </div>

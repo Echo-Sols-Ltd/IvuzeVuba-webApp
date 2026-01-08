@@ -57,7 +57,7 @@ export default function InventoryStats({ onRefresh }: InventoryStatsProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
       {statsArray.map((stat, i) => (
-        <Card key={i} title={stat.label} total={loading ? "..." : stat.value} />
+        <Card key={i} title={stat.label} total={loading ? 0 : stat.value} />
       ))}
     </div>
   );

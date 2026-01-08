@@ -5,6 +5,16 @@ import { useParams } from "next/navigation";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
+interface Prescription {
+  id?: string;
+  medicationName: string;
+  dosage: string;
+  duration: string;
+  frequency: string;
+  instructions?: string;
+  createdAt: string;
+}
+
 export default function PrescriptionForm() {
   const [form, setForm] = useState({
     medication: "",
@@ -14,7 +24,7 @@ export default function PrescriptionForm() {
     instructions: "",
   });
   const [loading, setLoading] = useState(false);
-  const [existingPrescriptions, setExistingPrescriptions] = useState([]);
+  const [existingPrescriptions, setExistingPrescriptions] = useState<Prescription[]>([]);
   const { toast } = useToast();
   const params = useParams();
   const patientId = params?.patientId;
@@ -127,8 +137,8 @@ export default function PrescriptionForm() {
                 </div>
                 <div className="text-sm text-gray-600">
                   <p>Dosage: {prescription.dosage}</p>
-                  <p>Duration: {prescription.durationDays} days</p>
-                  <p>Frequency: {prescription.frequencyPerDay}x daily</p>
+                  <p>Duration: {prescription.duration}</p>
+                  <p>Frequency: {prescription.frequency}</p>
                 </div>
               </div>
             ))}

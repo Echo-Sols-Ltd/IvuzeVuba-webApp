@@ -5,6 +5,21 @@ import { useParams } from "next/navigation";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
+interface VitalSign {
+  id?: string;
+  bloodPressure?: string;
+  systolicBp?: number;
+  diastolicBp?: number;
+  heartRate?: number;
+  temperature?: number;
+  temperatureUnit?: string;
+  spO2?: number;
+  oxygenSaturation?: number;
+  weight?: number;
+  height?: number;
+  createdAt: string;
+}
+
 export default function VitalsForm() {
   const [vitals, setVitals] = useState({
     bloodPressure: "",
@@ -15,7 +30,7 @@ export default function VitalsForm() {
     height: "",
   });
   const [loading, setLoading] = useState(false);
-  const [existingVitals, setExistingVitals] = useState([]);
+  const [existingVitals, setExistingVitals] = useState<VitalSign[]>([]);
   const { toast } = useToast();
   const params = useParams();
   const patientId = params?.patientId;

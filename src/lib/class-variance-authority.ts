@@ -1,4 +1,6 @@
-import { type ClassValue, clsx } from "clsx"
+/* eslint-disable */
+import type { ClassValue } from "clsx"
+import { clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 type ConfigSchema = Record<string, Record<string, string>>
@@ -22,33 +24,35 @@ function cva<T extends ConfigSchema>(
 ) {
   const { variants = {} as T, defaultVariants = {} } = config || {}
 
-  return (
-    props: ConfigVariantsMulti<T> & { className?: string } = {}
-  ) => {
-    const { className, ...rest } = props
+  return (props?: ConfigVariantsMulti<T> & { className?: string }) => {
+    const { className } = props || {};
     const variantKeys = Object.keys(variants)
     const classNames = [base]
 
     for (const variant of variantKeys) {
-      const variantValue = props[variant]
+      const variantValue = props?.[variant]
       if (!variantValue) continue
 
       const variantConfig = variants[variant]
       const variantClass = Array.isArray(variantValue)
-        ? variantValue.map(v => variantConfig[v]).filter(Boolean)
-        : variantConfig[variantValue]
+        ? variantValue.map(v => variantConfig[v as string]).filter(Boolean)
+        : variantConfig[variantValue as string]
 
       if (variantClass) {
-        classNames.push(variantClass)
+        if (Array.isArray(variantClass)) {
+          classNames.push(...variantClass)
+        } else {
+          classNames.push(variantClass)
+        }
       }
     }
 
     if (defaultVariants) {
       for (const variant in defaultVariants) {
-        if (props[variant] === undefined) {
-          const defaultVariant = defaultVariants[variant]
+        if (props?.[variant] === undefined) {
+          const defaultVariant = defaultVariants[variant as keyof typeof defaultVariants]
           if (defaultVariant) {
-            classNames.push(variants[variant][defaultVariant])
+            classNames.push(variants[variant][defaultVariant as string])
           }
         }
       }

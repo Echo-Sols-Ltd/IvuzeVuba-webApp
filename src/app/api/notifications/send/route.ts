@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
-import { EventEmitter } from 'events';
-
-// Re-export the event emitter from the stream route
-import { eventEmitter } from '../stream/route';
+import { eventEmitter } from '@/lib/notifications';
 
 export async function POST(request: Request) {
   try {

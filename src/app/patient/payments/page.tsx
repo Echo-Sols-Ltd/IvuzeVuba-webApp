@@ -64,6 +64,10 @@ const PaymentsPage = () => {
         const transformedTransactions: Transaction[] = Array.isArray(transactionsData) 
           ? transactionsData.map((t: any) => {
               try {
+                const statusLower = String(t.status || "completed").toLowerCase();
+                const validStatus: "completed" | "failed" = 
+                  statusLower === "failed" ? "failed" : "completed";
+                
                 return {
                   id: String(t.id || Math.random()),
                   date: t.date ? new Date(t.date).toLocaleDateString() : "N/A",
@@ -72,7 +76,7 @@ const PaymentsPage = () => {
                   method: String(t.method || "Mobile money"),
                   reference: `#REF${String(t.id || '').substring(0, 8)}`,
                   amount: `${t.amount >= 0 ? '+' : ''}${Number(t.amount || 0).toLocaleString()} RWF`,
-                  status: String(t.status || "completed").toLowerCase(),
+                  status: validStatus,
                   type: (t.amount >= 0 ? "credit" : "debit") as "credit" | "debit",
                 };
               } catch (error) {
@@ -85,7 +89,7 @@ const PaymentsPage = () => {
                   method: "N/A",
                   reference: "#N/A",
                   amount: "0 RWF",
-                  status: "completed",
+                  status: "completed" as const,
                   type: "credit" as const,
                 };
               }

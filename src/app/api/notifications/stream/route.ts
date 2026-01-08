@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { EventEmitter } from 'events';
 import { v4 as uuidv4 } from 'uuid';
+import { eventEmitter } from '@/lib/notifications';
 
 // In-memory store for connected clients
 const clients = new Map();
-export const eventEmitter = new EventEmitter();
 
 // Handle SSE connections
 export async function GET(request: NextRequest) {
@@ -56,14 +55,6 @@ export async function GET(request: NextRequest) {
   });
 }
 
-// Helper function to send notifications to a specific user
-export function sendNotification(userId: string, notification: any) {
-  eventEmitter.emit(`notification:${userId}`, {
-    ...notification,
-    timestamp: new Date().toISOString(),
-  });
-}
-
 // Example of how to use this from another API route:
-// import { sendNotification } from './stream/route';
+// import { sendNotification } from '@/lib/notifications';
 // sendNotification(userId, { type: 'info', title: 'New Message', message: 'You have a new message' });
