@@ -7,6 +7,7 @@ import { getDoctorQueue, updateAppointmentToConsultation } from "@/lib/doctorApi
 import { useToast } from "@/hooks/use-toast";
 import ReferralModal from "./patient-queue/ReferralModal";
 
+// top queue
 const TopQueue = () => {
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
