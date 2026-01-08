@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 // In-memory store for connected clients
 const clients = new Map();
-const eventEmitter = new EventEmitter();
+export const eventEmitter = new EventEmitter();
 
 // Handle SSE connections
 export async function GET(request: NextRequest) {
