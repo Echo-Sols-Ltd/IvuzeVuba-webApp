@@ -75,7 +75,7 @@ const FinancialChart = ({ stats }: FinancialChartProps) => {
                         <XAxis dataKey="name" />
                         <YAxis tickFormatter={formatCurrency} />
                         <Tooltip
-                            formatter={(value: number) => formatCurrency(value)}
+                            formatter={(value: number | undefined) => value !== undefined ? formatCurrency(value) : ''}
                             contentStyle={{
                                 backgroundColor: "white",
                                 border: "1px solid #e5e7eb",

@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, ArrowLeft, X, User, MapPin, Shield, Check } from "lucide-react";
+import { ArrowRight, ArrowLeft, X, User, MapPin, Shield, Check, Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
@@ -53,6 +53,8 @@ export default function PatientRegistrationPage() {
   const [showAlert, setShowAlert] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<FormData>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const stages = [
@@ -495,14 +497,28 @@ export default function PatientRegistrationPage() {
             <Label htmlFor="password" className="text-sm font-medium text-gray-700">
               Password *
             </Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => handleInputChange("password", e.target.value)}
-              placeholder="Create a strong password"
-              className={`mt-1 transition-all duration-200 ${errors.password ? 'border-red-500 ring-red-100' : 'focus:ring-blue-100'}`}
-            />
+            <div className="relative mt-1">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                placeholder="Create a strong password"
+                className={`pr-10 transition-all duration-200 ${errors.password ? 'border-red-500 ring-red-100' : 'focus:ring-blue-100'}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
             {errors.password && (
               <motion.p 
                 className="text-red-500 text-sm mt-1"
@@ -530,14 +546,28 @@ export default function PatientRegistrationPage() {
             <Label htmlFor="confirmPassword" className="text-sm font-medium text-gray-700">
               Confirm Password *
             </Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-              placeholder="Confirm your password"
-              className={`mt-1 transition-all duration-200 ${errors.confirmPassword ? 'border-red-500 ring-red-100' : 'focus:ring-blue-100'}`}
-            />
+            <div className="relative mt-1">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                placeholder="Confirm your password"
+                className={`pr-10 transition-all duration-200 ${errors.confirmPassword ? 'border-red-500 ring-red-100' : 'focus:ring-blue-100'}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
             {errors.confirmPassword && (
               <motion.p 
                 className="text-red-500 text-sm mt-1"
