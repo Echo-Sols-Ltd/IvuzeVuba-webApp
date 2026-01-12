@@ -170,72 +170,13 @@ export default function CreateVisitPage() {
     return Stethoscope;
   };
 
-  const departments = availableDepartments.length > 0
-    ? availableDepartments.map((dept: any) => ({
-      id: dept.id || dept.name,
-      name: dept.name,
-      description: dept.description || "Healthcare services",
-      color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
-      textColor: "text-blue-700",
-    }))
-    : [
-      {
-        id: "general",
-        name: "General Medicine",
-        description: "General health consultations and check-ups",
-        color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
-        textColor: "text-blue-700",
-      },
-      {
-        id: "cardiology",
-        name: "Cardiology",
-        description: "Heart and cardiovascular health",
-        color: "bg-red-50 border-red-200 hover:bg-red-100",
-        textColor: "text-red-700",
-      },
-      {
-        id: "dermatology",
-        name: "Dermatology",
-        description: "Skin conditions and treatments",
-        color: "bg-orange-50 border-orange-200 hover:bg-orange-100",
-        textColor: "text-orange-700",
-      },
-      {
-        id: "orthopedics",
-        name: "Orthopedics",
-        description: "Bone and joint health",
-        color: "bg-green-50 border-green-200 hover:bg-green-100",
-        textColor: "text-green-700",
-      },
-      {
-        id: "pediatrics",
-        name: "Pediatrics",
-        description: "Child healthcare services",
-        color: "bg-pink-50 border-pink-200 hover:bg-pink-100",
-        textColor: "text-pink-700",
-      },
-      {
-        id: "neurology",
-        name: "Neurology",
-        description: "Nervous system disorders",
-        color: "bg-purple-50 border-purple-200 hover:bg-purple-100",
-        textColor: "text-purple-700",
-      },
-      {
-        id: "psychiatry",
-        name: "Psychiatry",
-        description: "Mental health services",
-        color: "bg-indigo-50 border-indigo-200 hover:bg-indigo-100",
-        textColor: "text-indigo-700",
-      },
-      {
-        id: "ophthalmology",
-        name: "Ophthalmology",
-        description: "Eye care and vision services",
-        color: "bg-teal-50 border-teal-200 hover:bg-teal-100",
-        textColor: "text-teal-700",
-      },
-    ];
+  const departments = availableDepartments.map((dept: any) => ({
+    id: dept.id || dept.name,
+    name: dept.name,
+    description: dept.description || "Healthcare services",
+    color: "bg-blue-50 border-blue-200 hover:bg-blue-100",
+    textColor: "text-blue-700",
+  }));
 
   const experienceTips = [
     {
@@ -293,6 +234,12 @@ export default function CreateVisitPage() {
               <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 md:mb-6">
                 Choose Department
               </h2>
+              {departments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm sm:text-base">No departments available at the moment.</p>
+                  <p className="text-xs sm:text-sm mt-2">Please contact the hospital administration.</p>
+                </div>
+              ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                 {departments.map((dept, index) => {
                   const Icon = getDepartmentIcon(dept.name);
@@ -327,6 +274,7 @@ export default function CreateVisitPage() {
                   );
                 })}
               </div>
+              )}
             </motion.div>
 
             {/* Visit Details Form */}
@@ -455,6 +403,12 @@ export default function CreateVisitPage() {
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
                   Choose Your Department
                 </h2>
+                {departments.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <p className="text-base">No departments available at the moment.</p>
+                    <p className="text-sm mt-2">Please contact the hospital administration.</p>
+                  </div>
+                ) : (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
                   {departments.map((dept, index) => {
                     const Icon = getDepartmentIcon(dept.name);
@@ -493,6 +447,7 @@ export default function CreateVisitPage() {
                     );
                   })}
                 </div>
+                )}
               </div>
 
               <motion.div
