@@ -69,10 +69,19 @@ export default function AddDepartmentModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name) {
+    if (!formData.name || !formData.name.trim()) {
       toast({
         title: "Error",
         description: "Department name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.description || !formData.description.trim()) {
+      toast({
+        title: "Error",
+        description: "Department description is required",
         variant: "destructive",
       });
       return;
@@ -91,8 +100,8 @@ export default function AddDepartmentModal({
         method,
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
+          name: formData.name.trim(),
+          description: formData.description.trim(),
           headId: formData.headId || null,
         }),
       });
@@ -106,13 +115,19 @@ export default function AddDepartmentModal({
         onSuccess?.();
         onClose();
       } else {
-        const error = await response.text();
-        throw new Error(error || 'Failed to save department');
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.error || errorData?.message || 'Failed to save department';
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
       }
     } catch (error) {
+      console.error("Department creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create department",
+        description: error instanceof Error ? error.message : "Failed to create department",
         variant: "destructive",
       });
     } finally {
