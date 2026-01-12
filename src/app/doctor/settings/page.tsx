@@ -166,7 +166,7 @@ export default function DoctorSettingsPage() {
       if (response.ok) {
         toast({
           title: "Success",
-          description: "Password changed successfully",
+          description: data.message || "Password changed successfully",
         });
         setPasswordData({
           currentPassword: "",
@@ -176,14 +176,15 @@ export default function DoctorSettingsPage() {
       } else {
         toast({
           title: "Error",
-          description: data.error || "Failed to change password",
+          description: data.error || data.message || "Failed to change password",
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error("Password change error:", error);
       toast({
         title: "Error",
-        description: "Failed to change password",
+        description: "Failed to change password. Please try again.",
         variant: "destructive",
       });
     } finally {
