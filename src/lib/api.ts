@@ -91,6 +91,10 @@ export const API_ENDPOINTS = {
     },
     HOSPITALS: {
         LIST: `${API_BASE_URL}/api/hospitals`,
+        MY_HOSPITAL: `${API_BASE_URL}/api/hospitals/my-hospital`,
+        CREATE_OR_UPDATE: `${API_BASE_URL}/api/hospitals/my-hospital`,
+        UPDATE: (id: string) => `${API_BASE_URL}/api/hospitals/${id}`,
+        DELETE: (id: string) => `${API_BASE_URL}/api/hospitals/${id}`,
     },
     INVENTORY: {
         LIST: `${API_BASE_URL}/api/inventory`,

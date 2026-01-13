@@ -23,6 +23,16 @@ export default function ManagerSettingsPage() {
     address: "",
     id: "",
   });
+  const [hospital, setHospital] = useState({
+    id: "",
+    name: "",
+    address: "",
+    phoneNumber: "",
+    email: "",
+  });
+  const [hospitalLoading, setHospitalLoading] = useState(false);
+  const [hospitalSaving, setHospitalSaving] = useState(false);
+  const [isEditingHospital, setIsEditingHospital] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -41,6 +51,7 @@ export default function ManagerSettingsPage() {
 
   useEffect(() => {
     fetchProfile();
+    fetchHospital();
   }, []);
 
   const fetchProfile = async () => {
@@ -77,6 +88,33 @@ export default function ManagerSettingsPage() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHospital = async () => {
+    try {
+      setHospitalLoading(true);
+      const response = await fetch(API_ENDPOINTS.HOSPITALS.MY_HOSPITAL, {
+        headers: getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHospital({
+          id: data.id || "",
+          name: data.name || "",
+          address: data.address || "",
+          phoneNumber: data.phoneNumber || "",
+          email: data.email || "",
+        });
+      } else {
+        // Hospital not found is okay - manager can create one
+        console.log("No hospital found for manager");
+      }
+    } catch (error) {
+      console.error("Error fetching hospital:", error);
+    } finally {
+      setHospitalLoading(false);
     }
   };
 
@@ -320,6 +358,57 @@ export default function ManagerSettingsPage() {
     }
   };
 
+  const handleSaveHospital = async () => {
+    if (!hospital.name) {
+      toast({
+        title: "Error",
+        description: "Hospital name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setHospitalSaving(true);
+    try {
+      const response = await fetch(API_ENDPOINTS.HOSPITALS.CREATE_OR_UPDATE, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(hospital),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setHospital({
+          id: data.id || "",
+          name: data.name || "",
+          address: data.address || "",
+          phoneNumber: data.phoneNumber || "",
+          email: data.email || "",
+        });
+        toast({
+          title: "Success",
+          description: "Hospital information saved successfully",
+        });
+        setIsEditingHospital(false);
+      } else {
+        const error = await response.text();
+        toast({
+          title: "Error",
+          description: error || "Failed to save hospital information",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save hospital information",
+        variant: "destructive",
+      });
+    } finally {
+      setHospitalSaving(false);
+    }
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -347,6 +436,10 @@ export default function ManagerSettingsPage() {
           <TabsTrigger value="profile" className="gap-2 data-[state=active]:bg-[#118CDB] data-[state=active]:text-white">
             <User className="h-4 w-4" />
             Profile
+          </TabsTrigger>
+          <TabsTrigger value="hospital" className="gap-2 data-[state=active]:bg-[#118CDB] data-[state=active]:text-white">
+            <Settings className="h-4 w-4" />
+            Hospital
           </TabsTrigger>
           <TabsTrigger value="security" className="gap-2 data-[state=active]:bg-[#118CDB] data-[state=active]:text-white">
             <Lock className="h-4 w-4" />
@@ -570,6 +663,113 @@ export default function ManagerSettingsPage() {
                 )}
               </div>
             </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="hospital">
+          <Card className="bg-white/80 backdrop-blur-sm border border-white/60 shadow-lg hover:shadow-xl transition-all duration-300 p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Hospital Information</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Configure your hospital details. This information will be used when creating staff members and throughout the system.
+            </p>
+
+            {hospitalLoading ? (
+              <div className="flex justify-center py-8">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="hospitalName" className="text-sm font-semibold text-gray-700">
+                      Hospital Name *
+                    </Label>
+                    <Input 
+                      id="hospitalName" 
+                      value={hospital.name} 
+                      onChange={(e) => setHospital({...hospital, name: e.target.value})} 
+                      disabled={!isEditingHospital}
+                      placeholder="Enter hospital name"
+                      className={`mt-1 ${!isEditingHospital ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
+                    />
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <Label htmlFor="hospitalAddress" className="text-sm font-semibold text-gray-700">
+                      Address
+                    </Label>
+                    <Input 
+                      id="hospitalAddress" 
+                      value={hospital.address} 
+                      onChange={(e) => setHospital({...hospital, address: e.target.value})} 
+                      disabled={!isEditingHospital}
+                      placeholder="Enter hospital address"
+                      className={`mt-1 ${!isEditingHospital ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="hospitalPhone" className="text-sm font-semibold text-gray-700">
+                      Phone Number
+                    </Label>
+                    <Input 
+                      id="hospitalPhone" 
+                      value={hospital.phoneNumber} 
+                      onChange={(e) => setHospital({...hospital, phoneNumber: e.target.value})} 
+                      disabled={!isEditingHospital}
+                      placeholder="+250 700 000 000"
+                      className={`mt-1 ${!isEditingHospital ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="hospitalEmail" className="text-sm font-semibold text-gray-700">
+                      Email
+                    </Label>
+                    <Input 
+                      id="hospitalEmail" 
+                      type="email"
+                      value={hospital.email} 
+                      onChange={(e) => setHospital({...hospital, email: e.target.value})} 
+                      disabled={!isEditingHospital}
+                      placeholder="hospital@example.com"
+                      className={`mt-1 ${!isEditingHospital ? "bg-gray-50/80" : "bg-white"} border-gray-200 focus:border-[#118CDB] focus:ring-[#118CDB]`}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-8">
+                  {!isEditingHospital ? (
+                    <Button onClick={() => setIsEditingHospital(true)} className="bg-[#118CDB] hover:bg-[#0F7BC7]">
+                      {hospital.id ? "Edit Hospital" : "Add Hospital"}
+                    </Button>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => {
+                          fetchHospital();
+                          setIsEditingHospital(false);
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={handleSaveHospital} disabled={hospitalSaving} className="bg-[#118CDB] hover:bg-[#0F7BC7]">
+                        {hospitalSaving ? "Saving..." : "Save Hospital"}
+                      </Button>
+                    </>
+                  )}
+                </div>
+
+                {hospital.id && (
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-900">
+                      <strong>Note:</strong> This hospital will be automatically selected when creating new staff members.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </Card>
         </TabsContent>
       </Tabs>

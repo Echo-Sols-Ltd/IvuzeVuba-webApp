@@ -83,6 +83,23 @@ export default function AddUserModal({ isOpen = false, onClose, onSuccess }: Add
         const hospData = await hospResponse.json();
         setHospitals(hospData);
       }
+
+      // Fetch manager's hospital and auto-select it
+      try {
+        const myHospitalResponse = await fetch(API_ENDPOINTS.HOSPITALS.MY_HOSPITAL, {
+          headers: getAuthHeaders(),
+        });
+
+        if (myHospitalResponse.ok) {
+          const myHospital = await myHospitalResponse.json();
+          setFormData(prev => ({
+            ...prev,
+            hospitalId: myHospital.id
+          }));
+        }
+      } catch (error) {
+        console.log("No hospital assigned to manager yet");
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
       toast({
@@ -314,6 +331,11 @@ export default function AddUserModal({ isOpen = false, onClose, onSuccess }: Add
                   ))}
                 </SelectContent>
               </Select>
+              {formData.hospitalId && (
+                <p className="text-xs text-gray-500">
+                  Using your configured hospital
+                </p>
+              )}
             </div>
           </div>
           

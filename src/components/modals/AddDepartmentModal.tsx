@@ -189,7 +189,7 @@ export default function AddDepartmentModal({
             <Button type="button" variant="outline" onClick={onClose} className="px-6" disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="px-6" disabled={loading}>
               {loading 
                 ? formData.id ? 'Updating...' : 'Creating...' 
                 : formData.id ? 'Update Department' : 'Create Department'}
