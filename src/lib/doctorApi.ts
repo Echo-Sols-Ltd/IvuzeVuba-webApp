@@ -539,6 +539,39 @@ export const getPatientChart = async (appointmentId: string): Promise<PatientCha
     }
 };
 
+// Helper function to get patient ID from appointment
+export const getPatientIdFromAppointment = async (appointmentId: string): Promise<string | null> => {
+    try {
+        // Try chart endpoint first
+        const chartData = await getPatientChart(appointmentId);
+        if (chartData?.patientId) {
+            return chartData.patientId;
+        }
+
+        // Fallback: try to get from queue
+        const queueResponse = await fetch(API_ENDPOINTS.DOCTOR.QUEUE, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        if (queueResponse.ok) {
+            const queueData = await queueResponse.json();
+            const appointment = queueData.find(
+                (item: any) => item.id === appointmentId || item.appointmentId === appointmentId
+            );
+            
+            if (appointment?.patientId) {
+                return appointment.patientId;
+            }
+        }
+
+        return null;
+    } catch (error) {
+        console.error('Error getting patient ID:', error);
+        return null;
+    }
+};
+
 // Add clinical note
 export const addClinicalNote = async (appointmentId: string, noteData: any) => {
     try {

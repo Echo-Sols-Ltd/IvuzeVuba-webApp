@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { getPatientChart } from "@/lib/doctorApi";
+import { getPatientIdFromAppointment } from "@/lib/doctorApi";
 
 interface Prescription {
   id?: string;
@@ -46,13 +46,18 @@ export default function PrescriptionForm({
   const fetchPatientId = async () => {
     try {
       console.log("Fetching patient ID for appointment:", appointmentId);
-      const chartData = await getPatientChart(appointmentId);
-      console.log("Chart data received:", chartData);
-      if (chartData?.patientId) {
-        console.log("Setting patient ID:", chartData.patientId);
-        setPatientId(chartData.patientId);
+      const id = await getPatientIdFromAppointment(appointmentId);
+      console.log("Patient ID retrieved:", id);
+      
+      if (id) {
+        setPatientId(id);
       } else {
-        console.error("No patient ID found in chart data");
+        console.error("No patient ID found");
+        toast({
+          title: "Warning",
+          description: "Could not retrieve patient ID. Some features may not work.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error fetching patient ID:", error);

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { getPatientChart } from "@/lib/doctorApi";
+import { getPatientIdFromAppointment } from "@/lib/doctorApi";
 
 interface Order {
   id: string;
@@ -41,9 +41,9 @@ const Orders: React.FC<OrdersProps> = ({ appointmentId }) => {
 
   const fetchPatientId = async () => {
     try {
-      const chartData = await getPatientChart(appointmentId);
-      if (chartData?.patientId) {
-        setPatientId(chartData.patientId);
+      const id = await getPatientIdFromAppointment(appointmentId);
+      if (id) {
+        setPatientId(id);
       }
     } catch (error) {
       console.error("Error fetching patient ID:", error);
