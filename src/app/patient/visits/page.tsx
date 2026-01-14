@@ -16,12 +16,20 @@ import {
 import { Download, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import * as XLSX from "xlsx";
 
+interface Department {
+  id: string;
+  name: string;
+}
+
 export default function ViewVisitsPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [visits, setVisits] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -33,27 +41,23 @@ export default function ViewVisitsPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const departments = [
-    { id: "all", name: "All Departments" },
-    { id: "general", name: "General Medicine" },
-    { id: "cardiology", name: "Cardiology" },
-    { id: "dermatology", name: "Dermatology" },
-    { id: "orthopedics", name: "Orthopedics" },
-    { id: "pediatrics", name: "Pediatrics" },
-    { id: "neurology", name: "Neurology" },
-    { id: "psychiatry", name: "Psychiatry" },
-    { id: "ophthalmology", name: "Ophthalmology" },
-  ];
-
-  const [visits, setVisits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const fetchDepartments = async () => {
+    try {
+      const { getDepartments } = await import("@/lib/patientApi");
+      const data = await getDepartments();
+      setDepartments([{ id: "all", name: "All Departments" }, ...data]);
+    } catch (error) {
+      console.error('Error fetching departments:', error);
+      setDepartments([{ id: "all", name: "All Departments" }]);
+    }
+  };
 
   const fetchVisits = async () => {
     try {
       setLoading(true);
       const { getAppointments } = await import("@/lib/patientApi");
       const data = await getAppointments();
-      console.log('Fetched appointments:', data); // Debug log
+      console.log('Fetched appointments:', data);
       
       // Transform API data to match table format
       const transformedVisits = data.map((apt: any, index: number) => ({
@@ -63,17 +67,22 @@ export default function ViewVisitsPage() {
           : apt.preferredDate 
             ? new Date(apt.preferredDate).toLocaleDateString()
             : 'N/A',
-        facility: "Hospital",
+        time: apt.scheduledTime 
+          ? new Date(apt.scheduledTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : 'Not scheduled',
+        facility: apt.hospitalName || "Hospital",
         department: apt.departmentName || "N/A",
+        departmentId: apt.departmentId || "",
         doctor: apt.doctorName || apt.assignedDoctorName || "Not assigned yet",
         diagnosis: apt.reason || apt.diagnosis || "N/A",
         prescription: apt.prescriptionId ? "View Prescription" : "N/A",
-        payment: apt.paymentStatus || "N/A",
+        payment: apt.paymentStatus || "PENDING",
         status: apt.status || "PENDING",
         hasDownload: apt.status === "COMPLETED" || apt.status === "COMPLETE",
+        queuePosition: apt.queuePosition,
       }));
       
-      console.log('Transformed visits:', transformedVisits); // Debug log
+      console.log('Transformed visits:', transformedVisits);
       setVisits(transformedVisits);
     } catch (error) {
       console.error('Error fetching visits:', error);
@@ -84,6 +93,7 @@ export default function ViewVisitsPage() {
   };
 
   useEffect(() => {
+    fetchDepartments();
     fetchVisits();
   }, []);
 
@@ -103,12 +113,14 @@ export default function ViewVisitsPage() {
     const matchesDepartment =
       selectedDepartment === "" ||
       selectedDepartment === "all" ||
+      visit.departmentId === selectedDepartment ||
       visit.department.toLowerCase().includes(selectedDepartment.toLowerCase());
     const matchesSearch =
       searchQuery === "" ||
       visit.facility.toLowerCase().includes(searchQuery.toLowerCase()) ||
       visit.doctor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      visit.diagnosis.toLowerCase().includes(searchQuery.toLowerCase());
+      visit.diagnosis.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      visit.department.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesDepartment && matchesSearch;
   });
@@ -134,6 +146,26 @@ export default function ViewVisitsPage() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Visits");
     XLSX.writeFile(workbook, "all_visits.xlsx");
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig: Record<string, { bg: string; text: string; label: string }> = {
+      PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
+      CONFIRMED: { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Confirmed' },
+      IN_PROGRESS: { bg: 'bg-purple-100', text: 'text-purple-800', label: 'In Progress' },
+      COMPLETED: { bg: 'bg-green-100', text: 'text-green-800', label: 'Completed' },
+      COMPLETE: { bg: 'bg-green-100', text: 'text-green-800', label: 'Completed' },
+      CANCELLED: { bg: 'bg-red-100', text: 'text-red-800', label: 'Cancelled' },
+      NO_SHOW: { bg: 'bg-gray-100', text: 'text-gray-800', label: 'No Show' },
+    };
+
+    const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status };
+    
+    return (
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+        {config.label}
+      </span>
+    );
   };
 
   if (loading) {
@@ -210,10 +242,7 @@ export default function ViewVisitsPage() {
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Facility
+                        Date & Time
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Department
@@ -222,10 +251,10 @@ export default function ViewVisitsPage() {
                         Doctor
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Diagnosis
+                        Reason
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Prescription
+                        Status
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Payment
@@ -236,13 +265,25 @@ export default function ViewVisitsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {currentVisits.map((visit) => (
-                      <tr key={visit.id} className="hover:bg-gray-50 transition-colors duration-200">
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {visit.date}
+                    {currentVisits.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                          <div className="flex flex-col items-center justify-center">
+                            <p className="text-lg font-medium">No visits found</p>
+                            <p className="text-sm mt-1">
+                              {searchQuery || selectedDepartment !== "" && selectedDepartment !== "all"
+                                ? "Try adjusting your filters"
+                                : "You haven't submitted any appointments yet"}
+                            </p>
+                          </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {visit.facility}
+                      </tr>
+                    ) : (
+                      currentVisits.map((visit) => (
+                      <tr key={visit.id} className="hover:bg-gray-50 transition-colors duration-200">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          <div className="text-gray-900 font-medium">{visit.date}</div>
+                          <div className="text-gray-500 text-xs">{visit.time}</div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {visit.department}
@@ -254,7 +295,7 @@ export default function ViewVisitsPage() {
                                 ? 'bg-yellow-100 text-yellow-800' 
                                 : 'bg-green-100 text-green-800'
                             }`}>
-                              {visit.status === 'PENDING' && !visit.doctorName ? (
+                              {visit.doctor === 'Not assigned yet' ? (
                                 <span className="flex items-center">
                                   <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1.5"></span>
                                   Not assigned yet
@@ -268,14 +309,29 @@ export default function ViewVisitsPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {visit.diagnosis}
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          <div className="max-w-xs truncate" title={visit.diagnosis}>
+                            {visit.diagnosis}
+                          </div>
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {visit.prescription}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          {getStatusBadge(visit.status)}
+                          {visit.queuePosition && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Queue: #{visit.queuePosition}
+                            </div>
+                          )}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {visit.payment}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            visit.payment === 'PAID' || visit.payment === 'COMPLETED'
+                              ? 'bg-green-100 text-green-800'
+                              : visit.payment === 'PENDING'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {visit.payment}
+                          </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {visit.hasDownload && (
@@ -290,7 +346,8 @@ export default function ViewVisitsPage() {
                           )}
                         </td>
                       </tr>
-                    ))}
+                    ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -400,10 +457,7 @@ export default function ViewVisitsPage() {
                   <thead className="bg-gray-50 border-b">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Facility
+                        Date & Time
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Department
@@ -412,10 +466,10 @@ export default function ViewVisitsPage() {
                         Doctor
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Diagnosis
+                        Reason
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Prescription
+                        Status
                       </th>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Payment
@@ -426,13 +480,25 @@ export default function ViewVisitsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {currentVisits.map((visit) => (
-                      <tr key={visit.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {visit.date}
+                    {currentVisits.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                          <div className="flex flex-col items-center justify-center">
+                            <p className="text-lg font-medium">No visits found</p>
+                            <p className="text-sm mt-1">
+                              {searchQuery || selectedDepartment !== "" && selectedDepartment !== "all"
+                                ? "Try adjusting your filters"
+                                : "You haven't submitted any appointments yet"}
+                            </p>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {visit.facility}
+                      </tr>
+                    ) : (
+                      currentVisits.map((visit) => (
+                      <tr key={visit.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="text-gray-900 font-medium">{visit.date}</div>
+                          <div className="text-gray-500 text-xs">{visit.time}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {visit.department}
@@ -444,7 +510,7 @@ export default function ViewVisitsPage() {
                                 ? 'bg-yellow-100 text-yellow-800' 
                                 : 'bg-green-100 text-green-800'
                             }`}>
-                              {visit.status === 'PENDING' && !visit.doctorName ? (
+                              {visit.doctor === 'Not assigned yet' ? (
                                 <span className="flex items-center">
                                   <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 mr-2"></span>
                                   Not assigned yet
@@ -458,14 +524,29 @@ export default function ViewVisitsPage() {
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {visit.diagnosis}
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          <div className="max-w-xs truncate" title={visit.diagnosis}>
+                            {visit.diagnosis}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {visit.prescription}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {getStatusBadge(visit.status)}
+                          {visit.queuePosition && (
+                            <div className="text-xs text-gray-500 mt-1">
+                              Queue: #{visit.queuePosition}
+                            </div>
+                          )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {visit.payment}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                            visit.payment === 'PAID' || visit.payment === 'COMPLETED'
+                              ? 'bg-green-100 text-green-800'
+                              : visit.payment === 'PENDING'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {visit.payment}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {visit.hasDownload && (
@@ -480,7 +561,8 @@ export default function ViewVisitsPage() {
                           )}
                         </td>
                       </tr>
-                    ))}
+                    ))
+                    )}
                   </tbody>
                 </table>
               </div>
