@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
 import { AlertTriangle, Info, AlertCircle, XCircle } from "lucide-react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 
@@ -16,22 +15,24 @@ interface Alert {
   createdAt: string;
 }
 
-const ClinicalAlerts: React.FC = () => {
+interface ClinicalAlertsProps {
+  appointmentId: string;
+}
+
+const ClinicalAlerts: React.FC<ClinicalAlertsProps> = ({ appointmentId }) => {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
-  const params = useParams();
-  const patientId = params?.patientId;
 
   useEffect(() => {
-    if (patientId) {
+    if (appointmentId) {
       fetchAlerts();
     }
-  }, [patientId]);
+  }, [appointmentId]);
 
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/clinical-alerts/${patientId}`, {
+      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/clinical-alerts/${appointmentId}`, {
         headers: getAuthHeaders(),
       });
 

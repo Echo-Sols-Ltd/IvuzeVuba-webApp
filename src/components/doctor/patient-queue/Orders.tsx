@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
 import { Search, Plus } from "lucide-react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +15,11 @@ interface Order {
   scheduledDate?: string;
 }
 
-const Orders: React.FC = () => {
+interface OrdersProps {
+  appointmentId: string;
+}
+
+const Orders: React.FC<OrdersProps> = ({ appointmentId }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -26,18 +29,16 @@ const Orders: React.FC = () => {
     description: "",
   });
   const { toast } = useToast();
-  const params = useParams();
-  const patientId = params?.patientId;
 
   useEffect(() => {
-    if (patientId) {
+    if (appointmentId) {
       fetchOrders();
     }
-  }, [patientId]);
+  }, [appointmentId]);
 
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/medical-orders/${patientId}`, {
+      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/medical-orders/${appointmentId}`, {
         headers: getAuthHeaders(),
       });
 
@@ -69,7 +70,7 @@ const Orders: React.FC = () => {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          patientId,
+          appointmentId,
           ...newOrder,
         }),
       });

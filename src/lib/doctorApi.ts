@@ -465,3 +465,92 @@ export const getDashboardStats = async (): Promise<OverviewStats> => {
         };
     }
 };
+
+// Patient Chart API
+export interface PatientChartData {
+    appointmentId: string;
+    patientId: string;
+    patientName: string;
+    patientEmail?: string;
+    patientPhone?: string;
+    patientAddress?: string;
+    patientDateOfBirth?: string;
+    appointmentDate: string;
+    appointmentTime?: string;
+    reason: string;
+    status: string;
+    departmentName?: string;
+    vitalSigns?: any[];
+    clinicalNotes?: any[];
+    prescriptions?: any[];
+    medicalOrders?: any[];
+    clinicalAlerts?: any[];
+}
+
+export const getPatientChart = async (appointmentId: string): Promise<PatientChartData | null> => {
+    try {
+        const response = await fetch(API_ENDPOINTS.DOCTOR.CHART(appointmentId), {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+
+        if (response.status === 204 || response.status === 404) {
+            return null;
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch patient chart');
+        }
+
+        const text = await response.text();
+        if (!text) {
+            return null;
+        }
+
+        return JSON.parse(text);
+    } catch (error) {
+        console.error('Error fetching patient chart:', error);
+        return null;
+    }
+};
+
+// Add clinical note
+export const addClinicalNote = async (appointmentId: string, noteData: any) => {
+    try {
+        const response = await fetch(API_ENDPOINTS.DOCTOR.ADD_NOTE(appointmentId), {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(noteData),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to add clinical note');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error adding clinical note:', error);
+        throw error;
+    }
+};
+
+// Add prescription
+export const addPrescription = async (prescriptionData: any) => {
+    try {
+        const response = await fetch(API_ENDPOINTS.DOCTOR.ADD_PRESCRIPTION, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(prescriptionData),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to add prescription');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error adding prescription:', error);
+        throw error;
+    }
+};
+

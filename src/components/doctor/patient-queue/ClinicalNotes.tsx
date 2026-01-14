@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,23 +12,25 @@ interface ClinicalNote {
   noteType?: string;
 }
 
-export default function ClinicalNotes() {
+interface ClinicalNotesProps {
+  appointmentId: string;
+}
+
+export default function ClinicalNotes({ appointmentId }: ClinicalNotesProps) {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [existingNotes, setExistingNotes] = useState<ClinicalNote[]>([]);
   const { toast } = useToast();
-  const params = useParams();
-  const patientId = params?.patientId;
 
   useEffect(() => {
-    if (patientId) {
+    if (appointmentId) {
       fetchExistingNotes();
     }
-  }, [patientId]);
+  }, [appointmentId]);
 
   const fetchExistingNotes = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/clinical-notes/${patientId}`, {
+      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/clinical-notes/${appointmentId}`, {
         headers: getAuthHeaders(),
       });
 
@@ -58,7 +59,7 @@ export default function ClinicalNotes() {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          patientId,
+          appointmentId,
           content: notes,
           noteType: "CLINICAL",
           title: "Clinical Note",

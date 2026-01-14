@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,7 +14,11 @@ interface Prescription {
   createdAt: string;
 }
 
-export default function PrescriptionForm() {
+interface PrescriptionFormProps {
+  appointmentId: string;
+}
+
+export default function PrescriptionForm({ appointmentId }: PrescriptionFormProps) {
   const [form, setForm] = useState({
     medication: "",
     dosage: "",
@@ -26,19 +29,16 @@ export default function PrescriptionForm() {
   const [loading, setLoading] = useState(false);
   const [existingPrescriptions, setExistingPrescriptions] = useState<Prescription[]>([]);
   const { toast } = useToast();
-  const params = useParams();
-  const patientId = params?.patientId;
 
   useEffect(() => {
-    if (patientId) {
+    if (appointmentId) {
       fetchExistingPrescriptions();
     }
-  }, [patientId]);
+  }, [appointmentId]);
 
   const fetchExistingPrescriptions = async () => {
     try {
-      // Note: You may need to create this endpoint in the backend
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/prescriptions/${patientId}`, {
+      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/prescriptions/${appointmentId}`, {
         headers: getAuthHeaders(),
       });
 
@@ -72,7 +72,7 @@ export default function PrescriptionForm() {
 
     try {
       const prescriptionData = {
-        patientId,
+        appointmentId,
         medicationName: form.medication,
         dosage: form.dosage,
         durationDays: parseInt(form.duration) || 7,

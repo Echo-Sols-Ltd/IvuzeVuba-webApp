@@ -10,7 +10,11 @@ import Orders from "./Orders";
 
 const tabs = ["Today", "Notes", "Vitals", "Prescriptions", "Orders", "Alerts"];
 
-export default function PatientTabs() {
+interface PatientTabsProps {
+  appointmentId: string;
+}
+
+export default function PatientTabs({ appointmentId }: PatientTabsProps) {
   const [activeTab, setActiveTab] = useState("Today");
 
   return (
@@ -34,12 +38,12 @@ export default function PatientTabs() {
 
       {/* Tab Content */}
       <div className="mt-6">
-        {activeTab === "Today" && <TodayVisitCard />}
-        {activeTab === "Notes" && <ClinicalNotes />}
-        {activeTab === "Prescriptions" && <PrescriptionForm />}
-        {activeTab === "Vitals" && <VitalsForm />}
-        {activeTab === "Alerts" && <ClinicalAlerts />}
-        {activeTab === "Orders" && <Orders />}
+        {activeTab === "Today" && <TodayVisitCard appointmentId={appointmentId} />}
+        {activeTab === "Notes" && <ClinicalNotes appointmentId={appointmentId} />}
+        {activeTab === "Prescriptions" && <PrescriptionForm appointmentId={appointmentId} />}
+        {activeTab === "Vitals" && <VitalsForm appointmentId={appointmentId} />}
+        {activeTab === "Alerts" && <ClinicalAlerts appointmentId={appointmentId} />}
+        {activeTab === "Orders" && <Orders appointmentId={appointmentId} />}
         {activeTab !== "Today" && activeTab !== "Notes" && activeTab !== "Prescriptions" && activeTab !== "Vitals" && activeTab !== "Alerts" && activeTab !== "Orders" && (
           <p className="text-gray-500 text-sm">No data available</p>
         )}

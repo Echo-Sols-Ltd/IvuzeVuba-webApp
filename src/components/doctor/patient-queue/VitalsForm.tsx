@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,7 +19,11 @@ interface VitalSign {
   createdAt: string;
 }
 
-export default function VitalsForm() {
+interface VitalsFormProps {
+  appointmentId: string;
+}
+
+export default function VitalsForm({ appointmentId }: VitalsFormProps) {
   const [vitals, setVitals] = useState({
     bloodPressure: "",
     heartRate: "",
@@ -32,18 +35,16 @@ export default function VitalsForm() {
   const [loading, setLoading] = useState(false);
   const [existingVitals, setExistingVitals] = useState<VitalSign[]>([]);
   const { toast } = useToast();
-  const params = useParams();
-  const patientId = params?.patientId;
 
   useEffect(() => {
-    if (patientId) {
+    if (appointmentId) {
       fetchExistingVitals();
     }
-  }, [patientId]);
+  }, [appointmentId]);
 
   const fetchExistingVitals = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/vital-signs/${patientId}`, {
+      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/vital-signs/${appointmentId}`, {
         headers: getAuthHeaders(),
       });
 
@@ -72,7 +73,7 @@ export default function VitalsForm() {
       const diastolicBp = bpParts[1] ? parseInt(bpParts[1]) : null;
 
       const vitalSignsData = {
-        patientId,
+        appointmentId,
         systolicBp,
         diastolicBp,
         heartRate: vitals.heartRate ? parseInt(vitals.heartRate) : null,
