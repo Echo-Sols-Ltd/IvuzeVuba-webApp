@@ -1,6 +1,14 @@
 // API Configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
 
+/**
+ * Session Management:
+ * - The SessionManager component (in layout.tsx) automatically intercepts all fetch requests
+ * - When a 401 (Unauthorized) response is detected, it clears auth data and redirects to login
+ * - No additional code needed in components - just use fetch() normally
+ * - For custom handling, use the useAuthenticatedFetch hook or authenticatedFetch helper
+ */
+
 // API Endpoints
 export const API_ENDPOINTS = {
     AUTH: {
@@ -151,4 +159,33 @@ export const handleApiError = (error: unknown): string => {
         return error.message;
     }
     return 'An unexpected error occurred';
+};
+
+// Helper function to handle session expiration
+const handleSessionExpired = () => {
+    // Clear all auth data
+    localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER_ROLE);
+    localStorage.removeItem(STORAGE_KEYS.USER_EMAIL);
+    localStorage.removeItem(STORAGE_KEYS.USER_ID);
+    
+    // Redirect to login page
+    window.location.href = '/auth/login';
+};
+
+// Enhanced fetch wrapper that handles session expiration
+export const authenticatedFetch = async (
+    url: string,
+    options: RequestInit = {}
+): Promise<Response> => {
+    const response = await fetch(url, options);
+    
+    // Check if session has expired (401 Unauthorized)
+    if (response.status === 401) {
+        handleSessionExpired();
+        throw new Error('Session expired. Please login again.');
+    }
+    
+    return response;
 };
