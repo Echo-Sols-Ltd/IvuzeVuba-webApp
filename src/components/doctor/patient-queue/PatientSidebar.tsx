@@ -64,8 +64,9 @@ export default function PatientSidebar({ appointmentId }: PatientSidebarProps) {
           height={96}
           className="rounded-full mx-auto"
         />
-        <h2 className="font-semibold mt-2">{chartData.patientName}</h2>
-        <p className="text-sm text-gray-500">#{appointmentId}</p>
+        <h2 className="font-semibold mt-2">{chartData.patientName || 'Unknown Patient'}</h2>
+        <p className="text-sm text-gray-500">Patient ID: {chartData.patientId}</p>
+        <p className="text-sm text-gray-400">Appointment: #{appointmentId.slice(0, 8)}</p>
       </div>
 
       {/* Contact Info */}
@@ -85,6 +86,9 @@ export default function PatientSidebar({ appointmentId }: PatientSidebarProps) {
         {chartData.patientAddress && (
           <p className="text-sm">Address: {chartData.patientAddress}</p>
         )}
+        {!chartData.patientPhone && !chartData.patientEmail && !chartData.patientAddress && (
+          <p className="text-sm text-gray-400">No contact information available</p>
+        )}
       </div>
 
       {/* Appointment Details */}
@@ -98,7 +102,7 @@ export default function PatientSidebar({ appointmentId }: PatientSidebarProps) {
         )}
         {chartData.status && (
           <p className="text-sm">
-            Status: <span className="capitalize">{chartData.status.toLowerCase()}</span>
+            Status: <span className="capitalize">{chartData.status.toLowerCase().replace('_', ' ')}</span>
           </p>
         )}
       </div>

@@ -470,7 +470,9 @@ export const getDashboardStats = async (): Promise<OverviewStats> => {
 export interface PatientChartData {
     appointmentId: string;
     patientId: string;
-    patientName: string;
+    patientName?: string;
+    patientFirstName?: string;
+    patientLastName?: string;
     patientEmail?: string;
     patientPhone?: string;
     patientAddress?: string;
@@ -507,7 +509,30 @@ export const getPatientChart = async (appointmentId: string): Promise<PatientCha
             return null;
         }
 
-        return JSON.parse(text);
+        const data = JSON.parse(text);
+        console.log('Raw chart data from API:', data); // Debug log
+        
+        // Construct patient name from available fields
+        let patientName = data.patientName;
+        if (!patientName && (data.patientFirstName || data.patientLastName)) {
+            patientName = `${data.patientFirstName || ''} ${data.patientLastName || ''}`.trim();
+        }
+        
+        // If still no name, try to construct from nested patient object
+        if (!patientName && data.patient) {
+            if (data.patient.firstName || data.patient.lastName) {
+                patientName = `${data.patient.firstName || ''} ${data.patient.lastName || ''}`.trim();
+            } else if (data.patient.name) {
+                patientName = data.patient.name;
+            }
+        }
+        
+        console.log('Constructed patient name:', patientName); // Debug log
+        
+        return {
+            ...data,
+            patientName: patientName || 'Unknown Patient',
+        };
     } catch (error) {
         console.error('Error fetching patient chart:', error);
         return null;
