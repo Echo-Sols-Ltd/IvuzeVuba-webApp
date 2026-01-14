@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { getPatientChart } from "@/lib/doctorApi";
 
 interface Order {
   id: string;
@@ -23,6 +24,7 @@ const Orders: React.FC<OrdersProps> = ({ appointmentId }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [patientId, setPatientId] = useState<string | null>(null);
   const [newOrder, setNewOrder] = useState({
     orderType: "LAB" as const,
     orderName: "",
@@ -32,15 +34,30 @@ const Orders: React.FC<OrdersProps> = ({ appointmentId }) => {
 
   useEffect(() => {
     if (appointmentId) {
+      fetchPatientId();
       fetchOrders();
     }
   }, [appointmentId]);
 
+  const fetchPatientId = async () => {
+    try {
+      const chartData = await getPatientChart(appointmentId);
+      if (chartData?.patientId) {
+        setPatientId(chartData.patientId);
+      }
+    } catch (error) {
+      console.error("Error fetching patient ID:", error);
+    }
+  };
+
   const fetchOrders = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/medical-orders/${appointmentId}`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await fetch(
+        `${API_ENDPOINTS.DOCTOR.BASE}/chart/medical-orders/${appointmentId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -53,7 +70,7 @@ const Orders: React.FC<OrdersProps> = ({ appointmentId }) => {
 
   const handleAddOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!newOrder.orderName.trim()) {
       toast({
         title: "Error",
@@ -63,17 +80,30 @@ const Orders: React.FC<OrdersProps> = ({ appointmentId }) => {
       return;
     }
 
+    if (!patientId) {
+      toast({
+        title: "Error",
+        description: "Patient ID not found. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/medical-orders`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          appointmentId,
-          ...newOrder,
-        }),
-      });
+      const response = await fetch(
+        `${API_ENDPOINTS.DOCTOR.BASE}/chart/medical-orders`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            patientId,
+            appointmentId,
+            ...newOrder,
+          }),
+        }
+      );
 
       if (response.ok) {
         toast({

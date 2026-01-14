@@ -38,10 +38,14 @@ const ClinicalAlerts: React.FC<ClinicalAlertsProps> = ({ appointmentId }) => {
 
       if (response.ok) {
         const data = await response.json();
-        setAlerts(data);
+        setAlerts(Array.isArray(data) ? data : []);
+      } else if (response.status === 404) {
+        // No alerts found - this is okay
+        setAlerts([]);
       }
     } catch (error) {
       console.error("Error fetching alerts:", error);
+      setAlerts([]);
     } finally {
       setLoading(false);
     }
@@ -73,32 +77,6 @@ const ClinicalAlerts: React.FC<ClinicalAlertsProps> = ({ appointmentId }) => {
     }
   };
 
-  // Default alerts if no alerts from database
-  const defaultAlerts = [
-    { 
-      id: "default-1", 
-      alertType: "ALLERGY", 
-      severity: "HIGH" as const, 
-      title: "Allergy Alert", 
-      message: "Patient allergic to penicillin", 
-      isActive: true, 
-      acknowledged: false, 
-      createdAt: new Date().toISOString() 
-    },
-    { 
-      id: "default-2", 
-      alertType: "SCREENING", 
-      severity: "MEDIUM" as const, 
-      title: "Screening Overdue", 
-      message: "Annual mammogram screening is overdue", 
-      isActive: true, 
-      acknowledged: false, 
-      createdAt: new Date().toISOString() 
-    },
-  ];
-
-  const displayAlerts = alerts.length > 0 ? alerts : defaultAlerts;
-
   if (loading) {
     return (
       <div className="max-w-3xl bg-white border rounded-lg shadow-sm p-6">
@@ -121,14 +99,14 @@ const ClinicalAlerts: React.FC<ClinicalAlertsProps> = ({ appointmentId }) => {
         )}
       </div>
       
-      {displayAlerts.length === 0 ? (
+      {alerts.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <Info className="w-12 h-12 mx-auto mb-3 text-gray-400" />
           <p className="text-sm">No clinical alerts for this patient</p>
         </div>
       ) : (
         <ul className="space-y-3">
-          {displayAlerts.map((alert) => (
+          {alerts.map((alert) => (
             <li 
               key={alert.id} 
               className={`flex items-start p-4 border-l-4 rounded-r-lg ${getSeverityColor(alert.severity)}`}

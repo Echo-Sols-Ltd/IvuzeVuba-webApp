@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { getPatientChart } from "@/lib/doctorApi";
 
 interface ClinicalNote {
   id?: string;
@@ -20,19 +21,35 @@ export default function ClinicalNotes({ appointmentId }: ClinicalNotesProps) {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [existingNotes, setExistingNotes] = useState<ClinicalNote[]>([]);
+  const [patientId, setPatientId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (appointmentId) {
+      fetchPatientId();
       fetchExistingNotes();
     }
   }, [appointmentId]);
 
+  const fetchPatientId = async () => {
+    try {
+      const chartData = await getPatientChart(appointmentId);
+      if (chartData?.patientId) {
+        setPatientId(chartData.patientId);
+      }
+    } catch (error) {
+      console.error("Error fetching patient ID:", error);
+    }
+  };
+
   const fetchExistingNotes = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/clinical-notes/${appointmentId}`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await fetch(
+        `${API_ENDPOINTS.DOCTOR.BASE}/chart/clinical-notes/${appointmentId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -53,18 +70,31 @@ export default function ClinicalNotes({ appointmentId }: ClinicalNotesProps) {
       return;
     }
 
+    if (!patientId) {
+      toast({
+        title: "Error",
+        description: "Patient ID not found. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/clinical-notes`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          appointmentId,
-          content: notes,
-          noteType: "CLINICAL",
-          title: "Clinical Note",
-        }),
-      });
+      const response = await fetch(
+        `${API_ENDPOINTS.DOCTOR.BASE}/chart/clinical-notes`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            patientId,
+            appointmentId,
+            content: notes,
+            noteType: "CLINICAL",
+            title: "Clinical Note",
+          }),
+        }
+      );
 
       if (response.ok) {
         toast({

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { getPatientChart } from "@/lib/doctorApi";
 
 interface Prescription {
   id?: string;
@@ -18,7 +19,9 @@ interface PrescriptionFormProps {
   appointmentId: string;
 }
 
-export default function PrescriptionForm({ appointmentId }: PrescriptionFormProps) {
+export default function PrescriptionForm({
+  appointmentId,
+}: PrescriptionFormProps) {
   const [form, setForm] = useState({
     medication: "",
     dosage: "",
@@ -27,20 +30,43 @@ export default function PrescriptionForm({ appointmentId }: PrescriptionFormProp
     instructions: "",
   });
   const [loading, setLoading] = useState(false);
-  const [existingPrescriptions, setExistingPrescriptions] = useState<Prescription[]>([]);
+  const [existingPrescriptions, setExistingPrescriptions] = useState<
+    Prescription[]
+  >([]);
+  const [patientId, setPatientId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (appointmentId) {
+      fetchPatientId();
       fetchExistingPrescriptions();
     }
   }, [appointmentId]);
 
+  const fetchPatientId = async () => {
+    try {
+      console.log("Fetching patient ID for appointment:", appointmentId);
+      const chartData = await getPatientChart(appointmentId);
+      console.log("Chart data received:", chartData);
+      if (chartData?.patientId) {
+        console.log("Setting patient ID:", chartData.patientId);
+        setPatientId(chartData.patientId);
+      } else {
+        console.error("No patient ID found in chart data");
+      }
+    } catch (error) {
+      console.error("Error fetching patient ID:", error);
+    }
+  };
+
   const fetchExistingPrescriptions = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/prescriptions/${appointmentId}`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await fetch(
+        `${API_ENDPOINTS.DOCTOR.BASE}/prescriptions/${appointmentId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -51,14 +77,16 @@ export default function PrescriptionForm({ appointmentId }: PrescriptionFormProp
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!form.medication || !form.dosage || !form.duration || !form.frequency) {
       toast({
         title: "Error",
@@ -68,25 +96,45 @@ export default function PrescriptionForm({ appointmentId }: PrescriptionFormProp
       return;
     }
 
+    if (!patientId) {
+      console.error("Patient ID is null or undefined");
+      toast({
+        title: "Error",
+        description: "Patient ID not found. Please refresh the page and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       const prescriptionData = {
+        patientId,
         appointmentId,
         medicationName: form.medication,
         dosage: form.dosage,
         durationDays: parseInt(form.duration) || 7,
         frequencyPerDay: parseInt(form.frequency) || 1,
         instructions: form.instructions,
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: new Date(Date.now() + (parseInt(form.duration) || 7) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        startDate: new Date().toISOString().split("T")[0],
+        endDate: new Date(
+          Date.now() + (parseInt(form.duration) || 7) * 24 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .split("T")[0],
       };
 
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/add-prescription`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(prescriptionData),
-      });
+      console.log("Sending prescription data:", prescriptionData); // Debug log
+
+      const response = await fetch(
+        `${API_ENDPOINTS.DOCTOR.BASE}/chart/add-prescription`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(prescriptionData),
+        }
+      );
 
       if (response.ok) {
         toast({
@@ -102,14 +150,23 @@ export default function PrescriptionForm({ appointmentId }: PrescriptionFormProp
         });
         fetchExistingPrescriptions(); // Refresh the prescriptions list
       } else {
-        const error = await response.text();
+        const errorText = await response.text();
+        console.error("Prescription error response:", errorText);
+        let errorMessage = "Failed to create prescription";
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorData.details || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
         toast({
           title: "Error",
-          description: error || "Failed to create prescription",
+          description: errorMessage,
           variant: "destructive",
         });
       }
     } catch (error) {
+      console.error("Prescription submission error:", error);
       toast({
         title: "Error",
         description: "Failed to create prescription",

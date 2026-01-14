@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { getPatientChart } from "@/lib/doctorApi";
 
 interface VitalSign {
   id?: string;
@@ -34,19 +35,35 @@ export default function VitalsForm({ appointmentId }: VitalsFormProps) {
   });
   const [loading, setLoading] = useState(false);
   const [existingVitals, setExistingVitals] = useState<VitalSign[]>([]);
+  const [patientId, setPatientId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     if (appointmentId) {
+      fetchPatientId();
       fetchExistingVitals();
     }
   }, [appointmentId]);
 
+  const fetchPatientId = async () => {
+    try {
+      const chartData = await getPatientChart(appointmentId);
+      if (chartData?.patientId) {
+        setPatientId(chartData.patientId);
+      }
+    } catch (error) {
+      console.error("Error fetching patient ID:", error);
+    }
+  };
+
   const fetchExistingVitals = async () => {
     try {
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/vital-signs/${appointmentId}`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await fetch(
+        `${API_ENDPOINTS.DOCTOR.BASE}/chart/vital-signs/${appointmentId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -64,33 +81,53 @@ export default function VitalsForm({ appointmentId }: VitalsFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!patientId) {
+      toast({
+        title: "Error",
+        description: "Patient ID not found. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
       // Parse blood pressure
-      const bpParts = vitals.bloodPressure.split('/');
+      const bpParts = vitals.bloodPressure.split("/");
       const systolicBp = bpParts[0] ? parseInt(bpParts[0]) : null;
       const diastolicBp = bpParts[1] ? parseInt(bpParts[1]) : null;
 
       const vitalSignsData = {
+        patientId,
         appointmentId,
         systolicBp,
         diastolicBp,
         heartRate: vitals.heartRate ? parseInt(vitals.heartRate) : null,
-        temperature: vitals.temperature ? parseFloat(vitals.temperature) : null,
+        temperature: vitals.temperature
+          ? parseFloat(vitals.temperature)
+          : null,
         temperatureUnit: "F",
-        oxygenSaturation: vitals.spO2 ? parseInt(vitals.spO2.replace('%', '')) : null,
+        oxygenSaturation: vitals.spO2
+          ? parseInt(vitals.spO2.replace("%", ""))
+          : null,
         weight: vitals.weight ? parseFloat(vitals.weight) : null,
         weightUnit: "lbs",
-        height: vitals.height ? parseFloat(vitals.height.replace(/['"]/g, '')) : null,
+        height: vitals.height
+          ? parseFloat(vitals.height.replace(/['"]/g, ""))
+          : null,
         heightUnit: "in",
       };
 
-      const response = await fetch(`${API_ENDPOINTS.DOCTOR.BASE}/chart/vital-signs`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(vitalSignsData),
-      });
+      const response = await fetch(
+        `${API_ENDPOINTS.DOCTOR.BASE}/chart/vital-signs`,
+        {
+          method: "POST",
+          headers: getAuthHeaders(),
+          body: JSON.stringify(vitalSignsData),
+        }
+      );
 
       if (response.ok) {
         toast({
