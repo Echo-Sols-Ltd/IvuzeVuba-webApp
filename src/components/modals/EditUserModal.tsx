@@ -32,6 +32,11 @@ interface Department {
   name: string;
 }
 
+interface Hospital {
+  id: string;
+  name: string;
+}
+
 export default function EditUserModal({ 
   staffId,
   userName, 
@@ -43,7 +48,9 @@ export default function EditUserModal({
 }: EditUserModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const { toast } = useToast();
 
   const nameParts = userName.split(" ");
@@ -55,33 +62,73 @@ export default function EditUserModal({
     licenseNumber: "",
     specialization: specialization || "",
     departmentId: "",
+    hospitalId: "",
     isAvailable: isAvailable ?? true,
   });
 
   useEffect(() => {
     if (open) {
-      fetchDepartments();
+      fetchStaffDetails();
+      fetchDepartmentsAndHospitals();
     }
   }, [open]);
 
-  const fetchDepartments = async () => {
+  const fetchStaffDetails = async () => {
+    setFetchingData(true);
     try {
-      const response = await fetch(API_ENDPOINTS.DEPARTMENTS.LIST, {
+      const response = await fetch(API_ENDPOINTS.STAFF.GET(staffId), {
         headers: getAuthHeaders(),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setDepartments(data);
-        
-        // Set current department if exists
-        const currentDept = data.find((d: Department) => d.name === department);
-        if (currentDept) {
-          setFormData(prev => ({ ...prev, departmentId: currentDept.id }));
-        }
+        const staffData = await response.json();
+        setFormData({
+          firstName: staffData.firstName || "",
+          lastName: staffData.lastName || "",
+          email: staffData.email || "",
+          phoneNumber: staffData.phoneNumber || "",
+          licenseNumber: staffData.licenseNumber || "",
+          specialization: staffData.specialization || "",
+          departmentId: staffData.departmentId || "",
+          hospitalId: staffData.hospitalId || "",
+          isAvailable: staffData.isAvailable ?? true,
+        });
       }
     } catch (error) {
-      console.error("Error fetching departments:", error);
+      console.error("Error fetching staff details:", error);
+      toast({
+        title: "Warning",
+        description: "Could not load all staff details",
+        variant: "destructive",
+      });
+    } finally {
+      setFetchingData(false);
+    }
+  };
+
+  const fetchDepartmentsAndHospitals = async () => {
+    try {
+      // Fetch departments
+      const deptResponse = await fetch(API_ENDPOINTS.DEPARTMENTS.LIST, {
+        headers: getAuthHeaders(),
+      });
+
+      if (deptResponse.ok) {
+        const data = await deptResponse.json();
+        setDepartments(data);
+      }
+
+      // Fetch hospitals
+      const hospResponse = await fetch(API_ENDPOINTS.HOSPITALS.LIST, {
+        headers: getAuthHeaders(),
+      });
+
+      if (hospResponse.ok) {
+        const hospData = await hospResponse.json();
+        setHospitals(hospData);
+      }
+    } catch (error) {
+      console.error("Error fetching departments and hospitals:", error);
     }
   };
 
@@ -136,7 +183,15 @@ export default function EditUserModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        {fetchingData ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-500">Loading staff details...</p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name</Label>
@@ -216,6 +271,25 @@ export default function EditUserModal({
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label>Hospital</Label>
+            <Select
+              value={formData.hospitalId}
+              onValueChange={(value) => setFormData({ ...formData, hospitalId: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select hospital" />
+              </SelectTrigger>
+              <SelectContent>
+                {hospitals.map((hosp) => (
+                  <SelectItem key={hosp.id} value={hosp.id}>
+                    {hosp.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -233,6 +307,7 @@ export default function EditUserModal({
             {loading ? "Updating..." : "Update Staff Member →"}
           </Button>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

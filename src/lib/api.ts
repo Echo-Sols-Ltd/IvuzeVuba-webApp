@@ -80,6 +80,7 @@ export const API_ENDPOINTS = {
     STAFF: {
         LIST: `${API_BASE_URL}/api/staff`,
         CREATE: `${API_BASE_URL}/api/staff`,
+        GET: (id: string) => `${API_BASE_URL}/api/staff/${id}`,
         UPDATE: (id: string) => `${API_BASE_URL}/api/staff/${id}`,
         DEACTIVATE: (id: string) => `${API_BASE_URL}/api/staff/${id}/deactivate`,
     },

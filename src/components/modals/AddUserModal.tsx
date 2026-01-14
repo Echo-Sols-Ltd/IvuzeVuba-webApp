@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { API_ENDPOINTS, getAuthHeaders } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 interface AddUserModalProps {
   isOpen?: boolean;
@@ -36,6 +37,7 @@ export default function AddUserModal({ isOpen = false, onClose, onSuccess }: Add
   const [loading, setLoading] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -247,15 +249,30 @@ export default function AddUserModal({ isOpen = false, onClose, onSuccess }: Add
           
           <div className="space-y-2">
             <Label htmlFor="password">Password *</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              placeholder="••••••••"
-              required
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="••••••••"
+                required
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
           
           <div className="space-y-2">
